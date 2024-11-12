@@ -1,0 +1,26 @@
+# LLM and Chat Models
+langchain-openai
+langchain-ollama
+
+# Document Processing
+langchain
+langgraph
+
+# Web and Document Loaders
+langchain-community
+requests
+beautifulsoup4  # Added this line to resolve the import error
+
+# Vector Stores
+langchain-chroma
+langchain-nomic
+
+# Embedding Models
+openai
+
+# Utilities
+typing-extensions
+tavily-python
+
+# Optional but recommended
+tiktoken

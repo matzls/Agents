@@ -1,0 +1,63 @@
+# Environment files
+.env
+*.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE and editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Logs
+*.log
+
+# Build and distribution files
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Temporary files
+*.tmp
+*.bak
+
+# Backup files
+*.backup
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
