@@ -2,7 +2,9 @@
   "dockerfile_lines": [],
   "graphs": {
     "rag_agent_basic": "./graph.py:graph",
-    "rag_agent_v03": "./graph_v03.py:graph"
+    "rag_agent_v02": "./graph_v02.py:graph",
+    "rag_agent_v03": "./graph_v03.py:graph",
+    "rag_agent_v04": "./graph_v04.py:graph"
   },
   "env": "./.env",
   "python_version": "3.11",
