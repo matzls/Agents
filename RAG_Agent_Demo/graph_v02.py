@@ -1,3 +1,32 @@
+"""
+RAG (Retrieval Augmented Generation) Workflow Graph
+
+This module implements an advanced question-answering system using LangGraph and LangChain.
+The workflow dynamically routes questions, retrieves relevant documents, generates answers,
+and validates the quality of generated responses.
+
+Key Features:
+- Intelligent routing between vector store and web search
+- Multi-stage document retrieval and relevance grading
+- Hallucination detection and answer quality assessment
+- Flexible retry mechanism for answer generation
+- Structured output generation
+
+The workflow is designed to:
+1. Determine the best information source for a query
+2. Retrieve and grade relevant documents
+3. Generate contextually accurate answers
+4. Validate the generated answer's quality
+5. Provide a structured output with sources and answer
+
+Dependencies:
+- LangChain
+- LangGraph
+- OpenAI
+- Chroma Vector Store
+- Tavily Search
+"""
+
 import os
 import json
 from typing import List, Annotated
@@ -493,7 +522,7 @@ workflow.set_conditional_entry_point(
     route_question,
     {
         "websearch": "websearch",
-        "vectorstore": "retrieve",
+        "retrieve": "retrieve",
     },
 )
 

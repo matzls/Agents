@@ -1,3 +1,31 @@
+"""
+RAG (Retrieval Augmented Generation) Agent Workflow
+
+This module implements a sophisticated question-answering system using LangGraph and LangChain.
+The workflow includes:
+- Document retrieval from a vector store
+- Optional web search for additional context
+- Answer generation with hallucination and relevance checks
+- Structured output generation
+
+Key Features:
+- Multi-step reasoning process
+- Adaptive information retrieval
+- Quality control for generated answers
+- Flexible routing between vector store and web search
+
+Dependencies:
+- LangChain
+- LangGraph
+- OpenAI
+- Chroma
+- Tavily Search
+
+Environment Setup:
+- Requires OpenAI API key
+- Requires Tavily API key (for web search)
+"""
+
 import os
 import json
 from typing import List, Annotated
@@ -161,7 +189,14 @@ Return JSON with two two keys, binary_score is 'yes' or 'no' score to indicate w
 # Define GraphState using TypedDict for type annotations
 @dataclass(kw_only=True)
 class InputState:
-    """Input state defines the interface between the graph and the user."""
+    """
+    Represents the initial input state for the RAG workflow.
+    
+    Attributes:
+        question (str): The user's query to be answered.
+        max_retries (int, optional): Maximum number of retry attempts for answer generation. 
+                                     Defaults to 3.
+    """
     
     question: str
     "The question to be answered by the RAG system."
@@ -222,13 +257,21 @@ def format_docs(docs):
 
 def retrieve(state: GraphState):
     """
-    Retrieve relevant documents from the vector store based on the user's question.
+    Retrieve relevant documents from the vector store for the given question.
+    
+    This function uses a pre-configured retriever to find the top 3 most 
+    relevant documents based on semantic similarity.
     
     Args:
-        state (GraphState): Current state of the workflow
+        state (GraphState): The current state of the workflow, containing the user's question.
     
     Returns:
-        dict: Updated state with retrieved documents
+        dict: Updated state with retrieved documents, including source metadata.
+    
+    Process:
+    1. Use the retriever to find semantically similar documents
+    2. Add source URL and source type to document metadata
+    3. Return the list of retrieved documents
     """
     question = state.question
     documents = retriever.invoke(question)
@@ -293,13 +336,20 @@ def grade_documents(state: GraphState):
 
 def web_search(state: GraphState):
     """
-    Perform a web search to retrieve additional information if needed.
+    Perform a web search to retrieve additional information when vector store 
+    documents are insufficient.
     
     Args:
-        state (GraphState): Current state of the workflow
+        state (GraphState): The current state of the workflow, containing the user's question.
     
     Returns:
-        dict: Updated state with additional documents from web search
+        dict: Updated state with additional web search documents.
+    
+    Process:
+    1. Use Tavily search tool to find relevant web documents
+    2. Convert web search results to Document objects
+    3. Add metadata including source and URL
+    4. Handle potential search failures gracefully
     """
     question = state.question
     documents = state.documents
@@ -336,13 +386,21 @@ def web_search(state: GraphState):
 
 def route_question(state: GraphState):
     """
-    Decide whether to use vector store or web search based on the user's question.
+    Determine the appropriate data source for answering the user's question.
+    
+    This function uses an LLM to decide whether to use the vector store 
+    or perform a web search based on the question's nature.
     
     Args:
-        state (GraphState): Current state of the workflow
+        state (GraphState): The current state of the workflow, containing the user's question.
     
     Returns:
-        str: Next node to transition to ('websearch' or 'vectorstore')
+        str: The next node to route to, either 'websearch' or 'retrieve'.
+    
+    Decision Logic:
+    - If the question is about agents, prompt engineering, or adversarial attacks, 
+      use the vector store ('retrieve')
+    - For current events or topics outside the vector store, use web search ('websearch')
     """
     route_question = llm_json_mode.invoke(
         [SystemMessage(content=router_instructions)]
@@ -449,13 +507,27 @@ Please try rephrasing your question or providing additional context."""
 
 def create_structured_output(state: GraphState) -> OutputState:
     """
-    Create a structured JSON output summarizing the workflow results.
+    Generate a structured, JSON-compatible output summarizing the RAG workflow results.
+    
+    This function consolidates the workflow's findings into a standardized output format,
+    making it easy to parse and use the results programmatically.
     
     Args:
-        state (GraphState): Current state of the workflow
+        state (GraphState): The final state of the workflow after answer generation.
     
     Returns:
-        OutputState: Structured output following the OutputState schema
+        OutputState: A structured output containing:
+        - Whether an answer was provided
+        - Documents used from RAG and web search
+        - The final generated answer
+    
+    Output Structure:
+    {
+        "answer_provided": "yes"/"no",
+        "rag_documents": [{"content": str, "source": str}, ...],
+        "websearch_documents": [{"content": str, "url": str}, ...],
+        "final_answer": str
+    }
     """
     final_answer = state.final_answer
     documents = state.documents
@@ -505,7 +577,7 @@ workflow.set_conditional_entry_point(
     route_question,
     {
         "websearch": "websearch",
-        "vectorstore": "retrieve",
+        "retrieve": "retrieve",
     },
 )
 
