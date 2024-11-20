@@ -412,17 +412,7 @@ def grade_generation_v_documents_and_question(state: GraphState):
     else:
         return "max retries"
 
-def write_report(state):
-    """
-    Placeholder function to handle report writing.
-    
-    Args:
-        state (GraphState): Current state of the workflow
-    
-    Returns:
-        str: Next node to transition to ('write_report')
-    """
-    return "write_report"
+
 
 def write_final_answer(state: GraphState):
     """
