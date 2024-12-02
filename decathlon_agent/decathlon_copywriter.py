@@ -4,246 +4,315 @@ This script implements a graph-based workflow for generating and validating mark
 """
 
 import os
-from typing import TypedDict, List, Dict, Any
+import time
+import operator
+from typing import TypedDict, List, Dict, Any, Optional
+from dataclasses import dataclass
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END, START
 from langchain.callbacks.tracers import LangChainTracer
-from langchain.callbacks.manager import CallbackManager
 from langsmith import Client
+import logging
+from tenacity import retry, wait_exponential, stop_after_attempt
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
-# Type definitions
+@dataclass(frozen=True)
 class CopyComponent:
-    def __init__(
-        self,
-        name: str,
-        char_limit: int,
-        briefing: str,
-        audience: str,
-        max_attempts: int = 3
-    ):
-        self.name = name
-        self.char_limit = char_limit
-        self.briefing = briefing
-        self.audience = audience
-        self.max_attempts = max_attempts
+    name: str
+    char_limit: int
+    briefing: str
+    audience: str
+    max_attempts: int = 3
 
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "char_limit": self.char_limit,
-            "briefing": self.briefing,
-            "audience": self.audience,
-            "max_attempts": self.max_attempts
-        }
+@dataclass(frozen=True)
+class ValidationResult:
+    char_count: int
+    within_limit: bool
+    is_empty: bool
 
-class CopyState(TypedDict):
-    component: Dict[str, Any]  # Changed to Dict since we're converting CopyComponent to dict
+@dataclass(frozen=True)
+class GenerationAttempt:
+    attempt_number: int
+    content: str
+    feedback: str
+    validation_results: ValidationResult
+
+class AgentState(TypedDict):
+    """Main state class for the copywriting workflow."""
+    component: CopyComponent
     generated_content: str
     validation_results: Dict[str, Any]
     errors: List[str]
     attempt_count: int
     status: str
+    generation_history: List[GenerationAttempt]
 
-# Initialize LangSmith client and tracer
-client = Client()
-tracer = LangChainTracer(
-    project_name="Decathlon_Agent"
-)
+def create_initial_state(component: CopyComponent) -> AgentState:
+    """Create initial state with proper typing."""
+    return AgentState(
+        component=component,
+        generated_content="",
+        validation_results={},
+        errors=[],
+        attempt_count=0,
+        status="initialized",
+        generation_history=[]
+    )
 
-# Initialize LLM
-llm = ChatOpenAI(
-    model="gpt-4",
-    temperature=0.4,
-    callbacks=[tracer],
-    callback_manager=CallbackManager([tracer])
-)
+@retry(wait=wait_exponential(multiplier=1, min=4, max=10),
+       stop=stop_after_attempt(3))
+def generate_with_retry(llm, prompt: str):
+    """Generate content with retry logic."""
+    return llm.invoke(prompt)
 
-def initialize_state(component: Dict[str, Any]) -> CopyState:
-    """Initialize the workflow state with a component."""
-    return {
-        "component": component,
-        "generated_content": "",
-        "validation_results": {},
-        "errors": [],
-        "attempt_count": 0,
-        "status": "initialized"
-    }
-
-def generate_content(state: CopyState) -> Dict[str, Any]:
+def generate_content(state: AgentState) -> AgentState:
     """Generate copy using LLM based on component requirements."""
-    updated_state = state.copy()
-    updated_state["attempt_count"] = state.get("attempt_count", 0) + 1
-    updated_state["errors"] = []
+    current_attempt = state['attempt_count'] + 1
+    logger.info(f"Starting generation attempt #{current_attempt}")
     
+    if current_attempt > state['component'].max_attempts:
+        return AgentState(
+            component=state['component'],
+            generated_content=state['generated_content'],
+            validation_results=state['validation_results'],
+            errors=state['errors'],
+            attempt_count=current_attempt,
+            status=f"stopped_max_attempts_reached_{state['component'].max_attempts}",
+            generation_history=state['generation_history']
+        )
+
     try:
-        print(f"\n=== Generation Attempt #{updated_state['attempt_count']}/{updated_state['component']['max_attempts']} ===")
+        previous_attempts_feedback = ""
+        if state['generation_history']:
+            previous_attempts_feedback = "\nVORHERIGE VERSUCHE UND FEEDBACK:\n"
+            for attempt in state['generation_history']:
+                previous_attempts_feedback += f"""
+Versuch #{attempt.attempt_number}:
+Text: {attempt.content}
+Feedback: {attempt.feedback}
+---"""
+        
         prompt = f"""Du bist ein Decathlon CRM Copywriter. 
-Erstelle motivierenden Content für {updated_state['component']['audience']}-Enthusiasten.
+Erstelle motivierenden Content für {state['component'].audience}-Enthusiasten.
 
 KONTEXT UND MARKENIDENTITÄT:
 - Freundlich und Einladend: Persönliche, einladende Note
 - Begeistert und Positiv: Freude am Sport vermitteln
-- Kundenorientiert und Unterstützend: Inspirierende Inhalte, klare Orientierung
-- Einfach und Direkt: Verständliche Sprache, kein Fachjargon
+- Kundenorientiert und Unterstützend: Inspirierende Inhalte
+- Einfach und Direkt: Verständliche Sprache
 - Spielerisch und Energetisch: Leichter Humor und Dynamik
 
-Briefing: {updated_state['component']['briefing']}
+Briefing: {state['component'].briefing}
 
 WICHTIGE REGELN:
 - Keine direkte Anrede
 - Keine CTAs oder Verlinkungen im Einführungstext
-- Exakte Zeichenlänge: {updated_state['component']['char_limit']} Zeichen
-- Der Content muss spezifisch auf {updated_state['component']['audience']} ausgerichtet sein
-- Nutze einen dynamischen, motivierenden Ton
-- Erwähne das Equipment im Kontext von {updated_state['component']['audience']}
+- Exakte Zeichenlänge: {state['component'].char_limit} Zeichen
+- Der Content muss spezifisch auf {state['component'].audience} ausgerichtet sein
 
-Erstelle den Text in deutscher Sprache."""
+{previous_attempts_feedback}
+
+Erstelle den Text in deutscher Sprache und beachte dabei das Feedback aus vorherigen Versuchen.
+WICHTIG: Der Text MUSS EXAKT {state['component'].char_limit} Zeichen lang sein."""
         
-        response = llm.invoke(prompt)
-        updated_state["generated_content"] = response.content
-        print(f"Generated content ({len(updated_state['generated_content'])} chars):")
-        print(updated_state["generated_content"])
+        # Add backoff between attempts
+        time.sleep(state['attempt_count'] * 2)
+        
+        response = generate_with_retry(ChatOpenAI(
+            model="gpt-4",
+            temperature=0.4,
+            max_retries=3,
+            request_timeout=30
+        ), prompt)
+        new_content = response.content
+        logger.info(f"Generated content with {len(new_content)} characters")
+        print(f"\nGenerated content:")
+        print(new_content)
+        
+        return AgentState(
+            component=state['component'],
+            generated_content=new_content,
+            validation_results=state['validation_results'],
+            errors=state['errors'],
+            attempt_count=current_attempt,
+            status=state['status'],
+            generation_history=state['generation_history']
+        )
         
     except Exception as e:
-        updated_state["errors"].append(f"Content generation error: {str(e)}")
-    
-    return updated_state
+        error_msg = f"Content generation error: {str(e)}"
+        logger.error(error_msg)
+        return AgentState(
+            component=state['component'],
+            generated_content=state['generated_content'],
+            validation_results=state['validation_results'],
+            errors=state['errors'] + [error_msg],
+            attempt_count=current_attempt,
+            status="error_during_generation",
+            generation_history=state['generation_history']
+        )
 
-def validate_content(state: CopyState) -> Dict[str, Any]:
+def validate_content(state: AgentState) -> AgentState:
     """Validate the generated content against requirements."""
-    print("\n=== Validation ===")
-    updated_state = state.copy()
-    content = updated_state["generated_content"]
-    char_limit = updated_state["component"]["char_limit"]
+    logger.info("Starting content validation")
+    content = state['generated_content']
+    char_limit = state['component'].char_limit
+    current_attempt = state['attempt_count']
     
-    validation = {
-        "char_count": len(content),
-        "within_limit": len(content) <= char_limit,
-        "is_empty": not content.strip()
-    }
+    validation = ValidationResult(
+        char_count=len(content),
+        within_limit=len(content) <= char_limit,
+        is_empty=not content.strip()
+    )
     
-    print(f"Character count: {validation['char_count']}/{char_limit}")
-    print(f"Within limit: {validation['within_limit']}")
+    logger.info(f"Character count: {validation.char_count}/{char_limit}")
     
-    updated_state["validation_results"] = validation
+    feedback = []
+    if not validation.within_limit:
+        feedback.append(f"Der Text ist zu lang ({len(content)} Zeichen). Bitte kürze auf exakt {char_limit} Zeichen.")
+    if validation.is_empty:
+        feedback.append("Der generierte Text ist leer. Bitte erstelle einen neuen Text.")
     
-    if not validation["within_limit"]:
-        error_msg = f"Content exceeds character limit: {len(content)}/{char_limit}"
-        updated_state["errors"].append(error_msg)
-        print(f"Error: {error_msg}")
-    if validation["is_empty"]:
-        error_msg = "Generated content is empty"
-        updated_state["errors"].append(error_msg)
-        print(f"Error: {error_msg}")
+    attempt = GenerationAttempt(
+        attempt_number=current_attempt,
+        content=content,
+        feedback=" ".join(feedback) if feedback else "Keine Probleme gefunden.",
+        validation_results=validation
+    )
     
-    return updated_state
+    return AgentState(
+        component=state['component'],
+        generated_content=state['generated_content'],
+        validation_results=validation.__dict__,
+        errors=state['errors'] + feedback,
+        attempt_count=current_attempt,
+        status="completed" if not feedback else state['status'],
+        generation_history=state['generation_history'] + [attempt]
+    )
 
-def should_regenerate(state: CopyState) -> str:
+def should_regenerate(state: AgentState) -> str:
     """Determine if content should be regenerated based on validation and attempt count."""
-    validation = state["validation_results"]
-    max_attempts = state["component"]["max_attempts"]
-    current_attempts = state["attempt_count"]
+    validation = ValidationResult(**state['validation_results'])
+    max_attempts = state['component'].max_attempts
+    current_attempts = state['attempt_count']
     
-    if current_attempts >= max_attempts:
-        print(f"\nReached maximum attempts ({max_attempts}). Stopping regeneration.")
-        state["status"] = f"stopped_max_attempts_reached_{max_attempts}"
-        state["errors"].append(f"Maximum attempts ({max_attempts}) reached without successful generation")
+    # Check for errors
+    if state['status'] == "error_during_generation":
+        logger.info("Stopping due to generation error")
         return END
     
-    should_regen = not validation["within_limit"] or validation["is_empty"]
-    print(f"\nShould regenerate: {should_regen} (Attempt {current_attempts}/{max_attempts})")
+    # Check max attempts
+    if current_attempts >= max_attempts:
+        logger.info(f"Reached maximum attempts ({max_attempts})")
+        return END
+    
+    should_regen = not validation.within_limit or validation.is_empty
+    logger.info(f"Should regenerate: {should_regen} (Attempt {current_attempts}/{max_attempts})")
     
     if not should_regen:
-        state["status"] = "completed_successfully"
         return END
     
     return "generate"
 
-def create_workflow():
-    """Create the workflow graph."""
-    workflow = StateGraph(CopyState)
+class DecathlonCopywriterAgent:
+    def __init__(self):
+        self.client = Client()
+        self.tracer = LangChainTracer(project_name="Decathlon_Agent")
+        
+        self.llm = ChatOpenAI(
+            model="gpt-4",
+            temperature=0.4,
+            callbacks=[self.tracer],
+            max_retries=3,
+            request_timeout=30
+        )
+        
+        self.workflow = self._create_workflow()
     
-    # Add nodes
-    workflow.add_node("generate", generate_content)
-    workflow.add_node("validate", validate_content)
+    def _create_workflow(self):
+        """Create the workflow graph with proper state schema."""
+        workflow = StateGraph(AgentState)
+        
+        workflow.add_node("generate", self._generate_node)
+        workflow.add_node("validate", self._validate_node)
+        
+        workflow.add_edge(START, "generate")
+        workflow.add_edge("generate", "validate")
+        
+        workflow.add_conditional_edges(
+            "validate",
+            self._should_regenerate
+        )
+        
+        return workflow.compile()
     
-    # Add edges
-    workflow.add_edge(START, "generate")
-    workflow.add_edge("generate", "validate")
+    def _generate_node(self, state: AgentState) -> AgentState:
+        return generate_content(state)
     
-    # Add conditional edge for regeneration
-    workflow.add_conditional_edges(
-        "validate",
-        should_regenerate
-    )
+    def _validate_node(self, state: AgentState) -> AgentState:
+        return validate_content(state)
     
-    return workflow.compile()
+    def _should_regenerate(self, state: AgentState) -> str:
+        return should_regenerate(state)
+    
+    def generate_copy(self, component: CopyComponent) -> AgentState:
+        """Public interface for generating copy."""
+        logger.info(f"Generating copy for component: {component.name}")
+        initial_state = create_initial_state(component)
+        return self.workflow.invoke(initial_state)
 
-
-
-
-def main():
-    # Test components
+# Example usage
+if __name__ == "__main__":
+    agent = DecathlonCopywriterAgent()
+    
     test_components = [
         CopyComponent(
-            name="headline basic",
-            char_limit=400,
-            briefing="Das Jahresende naht, heißt aber nicht, dass du auch das Jahr ruhig ausklingen lassen musst. Zieh jetzt nochmal richtig an und power dich zum Ende des Jahres nochmal komplett aus und erreiche neue Limits",
+            name="KIT_3_LEFT_title",
+            char_limit=50,
+            briefing="Ab ins Wasser und richtig auspowern",
             audience="Schwimmen"
         ),
         CopyComponent(
-            name="Product Teaser",
-            char_limit=50,
-            briefing="Neue Winterjacken-Kollektion mit innovativer Thermotechnologie",
-            audience="Basketball"
-        ),
-        CopyComponent(
-            name="Season Opening",
+            name="KIT_3_LEFT_copy",
             char_limit=200,
-            briefing="Start in die Wintersaison mit neuer Ski- und Snowboard",
-            audience="Ski"
+            briefing="Ab ins Wasser und richtig auspowern",
+            audience="Schwimmen"
         )
     ]
     
-    # Process each test component
-    for i, component in enumerate(test_components, 1):
-        print(f"\n\n{'='*50}")
-        print(f"TEST CASE {i}: {component.name}")
-        print(f"Character Limit: {component.char_limit}")
-        print(f"Max Attempts: {component.max_attempts}")
-        print(f"Briefing: {component.briefing}")
-        print(f"Audience: {component.audience}")
-        print(f"{'='*50}")
-        
+    for component in test_components:
         try:
-            initial_state = initialize_state(component.to_dict())
-            workflow = create_workflow()
-            final_state = workflow.invoke(initial_state)
+            result = agent.generate_copy(component)
             
-            print("\n=== Final Results ===")
-            print(f"Status: {final_state['status']}")
-            print(f"Total generation attempts: {final_state['attempt_count']}")
-            print(f"\nFinal Content ({len(final_state['generated_content'])} chars):")
-            print(final_state['generated_content'])
-            print("\nValidation Results:")
-            for key, value in final_state['validation_results'].items():
-                print(f"{key}: {value}")
+            print(f"\n{'='*50}")
+            print(f"Results for {component.name}")
+            print(f"{'='*50}")
+            print(f"Status: {result['status']}")
+            print(f"Total attempts: {result['attempt_count']}")
+            print(f"\nFinal Content ({len(result['generated_content'])} chars):")
+            print(result['generated_content'])
             
-            if final_state['errors']:
-                print("\nErrors encountered during process:")
-                for error in final_state['errors']:
+            if result['errors']:
+                print("\nErrors encountered:")
+                for error in result['errors']:
                     print(f"- {error}")
             
-            print("\n=== Complete State Dictionary ===")
-            import json
-            print(json.dumps(final_state, indent=2))
-                    
+            print("\nGeneration History:")
+            for attempt in result['generation_history']:
+                print(f"\nAttempt #{attempt.attempt_number}:")
+                print(f"Content ({len(attempt.content)} chars):")
+                print(attempt.content)
+                print(f"Feedback: {attempt.feedback}")
+            
+            # Add cooldown between components
+            time.sleep(10)
+            
         except Exception as e:
-            print(f"Workflow execution error: {str(e)}")
-
-if __name__ == "__main__":
-    main()
+            logger.error(f"Error processing component {component.name}: {str(e)}")

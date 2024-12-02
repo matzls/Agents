@@ -25,6 +25,19 @@ class DecathlonEmailState:
             'body_copies': []
         }
         self.validation_results: Dict[str, bool] = {}
+        self.rejection_info: Dict[str, Any] = {
+            'subject_lines': [],
+            'preheaders': [],
+            'headlines': [],
+            'body_copies': []
+        }
+        self.attempt_counts: Dict[str, int] = {
+            'subject_lines': 0,
+            'preheaders': 0,
+            'headlines': 0,
+            'body_copies': 0
+        }
+        self.max_retries: int = 3
 
 def load_knowledge_base(guidelines_path: str) -> Dict[str, Any]:
     """
@@ -72,14 +85,101 @@ def create_workflow(llm: BaseLanguageModel):
         return state
     
     def content_generation_node(state: DecathlonEmailState):
-        # TODO: Implement multi-variant content generation
         logger.info("Generating content variants")
+        
+        components = ['subject_lines', 'preheaders', 'headlines', 'body_copies']
+        
+        for component in components:
+            # Skip if max retries reached
+            if state.attempt_counts[component] >= state.max_retries:
+                logger.warning(f"Max retries reached for {component}")
+                continue
+                
+            # Get rejection info if available
+            rejection_context = ""
+            if state.rejection_info[component]:
+                last_rejection = state.rejection_info[component][-1]
+                rejection_context = f"\nPrevious generation was rejected because: {last_rejection['reason']}. "
+                rejection_context += f"Previous content: {last_rejection['content']}\n"
+                rejection_context += "Please address these issues in the new generation."
+            
+            # Generate content with rejection context
+            try:
+                prompt = f"""Generate email content for {component}.
+                Knowledge base context: {state.knowledge_base}
+                Briefing: {state.briefing}
+                {rejection_context}
+                """
+                
+                response = llm.invoke(prompt)
+                state.generated_variants[component].append(response)
+                state.attempt_counts[component] += 1
+                
+            except Exception as e:
+                logger.error(f"Error generating {component}: {str(e)}")
+        
         return state
     
     def validation_node(state: DecathlonEmailState):
-        # TODO: Implement compliance validation
         logger.info("Validating generated content")
-        return state
+        
+        components = ['subject_lines', 'preheaders', 'headlines', 'body_copies']
+        
+        for component in components:
+            if not state.generated_variants[component]:
+                continue
+                
+            latest_content = state.generated_variants[component][-1]
+            
+            # Validate content
+            try:
+                validation_prompt = f"""Validate this {component} content:
+                Content: {latest_content}
+                Requirements: {state.knowledge_base}
+                
+                Return JSON with:
+                - binary_score: 'yes' or 'no'
+                - reason: explanation if rejected
+                """
+                
+                result = llm.invoke(validation_prompt)
+                validation_result = result.json()
+                
+                if validation_result['binary_score'] == 'no':
+                    # Store rejection info
+                    rejection_info = {
+                        'reason': validation_result['reason'],
+                        'content': latest_content,
+                        'attempt': state.attempt_counts[component]
+                    }
+                    state.rejection_info[component].append(rejection_info)
+                    
+                    # Check if should regenerate
+                    if state.attempt_counts[component] < state.max_retries:
+                        logger.info(f"Content rejected for {component}, will regenerate")
+                        state.validation_results[component] = False
+                    else:
+                        logger.warning(f"Max retries reached for {component}")
+                        state.validation_results[component] = False
+                else:
+                    state.validation_results[component] = True
+                    # Clear rejection info on success
+                    state.rejection_info[component] = []
+                    
+            except Exception as e:
+                logger.error(f"Error validating {component}: {str(e)}")
+                state.validation_results[component] = False
+        
+        # Determine if any components need regeneration
+        needs_regeneration = any(
+            not result and state.attempt_counts[comp] < state.max_retries
+            for comp, result in state.validation_results.items()
+        )
+        
+        if needs_regeneration:
+            return "content_generation"
+        
+        return END
     
     # Initialize workflow
     workflow = StateGraph(DecathlonEmailState)
@@ -93,6 +193,7 @@ def create_workflow(llm: BaseLanguageModel):
     workflow.set_entry_point("web_crawling")
     workflow.add_edge("web_crawling", "content_generation")
     workflow.add_edge("content_generation", "validation")
+    workflow.add_edge("validation", "content_generation")  # Add regeneration edge
     workflow.add_edge("validation", END)
     
     return workflow.compile()
