@@ -561,29 +561,8 @@ graph = builder.compile(interrupt_before=['human_feedback'])
 
 # write a async function to run the graph
 async def run_graph(graph, input_data):
-    final_state = await graph.ainvoke(input_data)
+    async with graph.client() as client:
+        final_state = await client.run(input_data)
     return final_state
-
-
-### run the graph
-async def main():
-    # Example input data for running the graph
-    input_data = {
-        "topic": "dharma",
-        "max_analysts": 3,
-        "human_analyst_feedback": "approve"
-    }
-
-    # Run the graph
-    final_state = await run_graph(graph, input_data)
-
-    # Print the final report
-    print("\n--- FINAL RESEARCH REPORT ---")
-    print(final_state['final_report'])
-
-# Ensure the script can be run directly
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
 
 

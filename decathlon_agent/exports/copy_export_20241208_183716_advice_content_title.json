@@ -1,0 +1,49 @@
+{
+  "timestamp": "2024-12-08T18:37:16.857266",
+  "component": {
+    "name": "advice_content_title",
+    "type": "advice",
+    "element": "content_title",
+    "audience": "Schwimmen",
+    "char_limit": 30,
+    "briefing": "Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt"
+  },
+  "generation_result": {
+    "final_content": "\"Ins Wasser! Jahresendspurt starten!\"",
+    "char_count": 37,
+    "status": "initialized",
+    "total_attempts": 3
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "\"Jahresendspurt! Tauch ein, schwimm los!\"",
+      "feedback": "Der Text ist zu lang (41 Zeichen). Bitte kürze auf exakt 30 Zeichen.",
+      "validation": {
+        "char_count": 41,
+        "within_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt": 2,
+      "content": "\"Endspurt! Schwimm ins neue Jahr!\"",
+      "feedback": "Der Text ist zu lang (34 Zeichen). Bitte kürze auf exakt 30 Zeichen.",
+      "validation": {
+        "char_count": 34,
+        "within_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt": 3,
+      "content": "\"Ins Wasser! Jahresendspurt starten!\"",
+      "feedback": "Der Text ist zu lang (37 Zeichen). Bitte kürze auf exakt 30 Zeichen.",
+      "validation": {
+        "char_count": 37,
+        "within_limit": false,
+        "is_empty": false
+      }
+    }
+  ]
+}

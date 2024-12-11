@@ -1,0 +1,12 @@
+{
+  "dockerfile_lines": [],
+  "graphs": {
+    "decathlon_copywriter": "./decathlon_copywriter_agent_studio.py:graph",
+    "decathlon_copywriter_dev": "./decathlon_copywriter_agent_dev_studio.py:graph"
+  },
+  "env": "./.env",
+  "python_version": "3.11",
+  "dependencies": [
+    "."
+  ]
+}

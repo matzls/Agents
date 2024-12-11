@@ -1,0 +1,29 @@
+{
+  "timestamp": "2024-12-08T16:00:43.338587",
+  "component": {
+    "name": "advice_content_title",
+    "type": "advice",
+    "element": "content_title",
+    "audience": "Schwimmen",
+    "char_limit": 30,
+    "briefing": "Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt"
+  },
+  "generation_result": {
+    "final_content": "",
+    "char_count": 0,
+    "status": "error_during_generation",
+    "total_attempts": 1
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "",
+      "feedback": "Der generierte Text ist leer. Bitte erstelle einen neuen Text.",
+      "validation": {
+        "char_count": 0,
+        "within_limit": true,
+        "is_empty": true
+      }
+    }
+  ]
+}
