@@ -1,19 +1,55 @@
-Based on the code changes and our current state, I'll update the README.md to reflect the current implementation and next steps:
+I'll update the README.md to reflect the current state of the project, including the development version and knowledge base integration. Here's the updated version:
 
 ```markdown
-# Decathlon CRM Copywriter POC
+# Decathlon CRM Copywriter
 
-A proof-of-concept implementation of a CRM copywriting system for Decathlon using LangGraph and LangChain.
+A production-ready implementation of a CRM copywriting system for Decathlon using LangGraph and LangChain.
+
+## Project Structure
+
+```plaintext
+decathlon_agent/
+├── knowledge_base/
+│   ├── template_kb.py         # Knowledge base classes and loading functions
+│   ├── template_parser.py     # Excel to JSON parser for templates
+│   └── decathlon_template_kb.json  # Generated knowledge base
+├── exports/                   # Generated copy outputs
+├── decathlon_copywriter.py    # Stable production version
+├── decathlon_copywriter_dev.py # Development version with latest features
+├── .env                      # Environment configuration
+└── requirements.txt          # Project dependencies
+```
 
 ## Features
 
+### Core Features
 - Graph-based workflow management with LangGraph
-- OpenAI integration via LangChain
+- OpenAI GPT-4 integration via LangChain
 - TypedDict-based state management
-- Content validation with character limits
-- Comprehensive logging and error handling
-- Generation history tracking with attempt counting
-- Multi-component support for different content types
+- Structured knowledge base for templates and examples
+- Component-based content generation
+- Export functionality for generated content
+
+### Knowledge Base
+- Excel-based template management
+- Structured component templates
+- Example-based generation
+- Sport-specific rules and guidelines
+- Automated JSON conversion
+
+### Validation System
+- Character limit validation
+- Content quality checks
+- Generation attempt tracking
+- Comprehensive error handling
+- Detailed feedback system
+
+### Export System
+- JSON-based export format
+- Timestamp-based file naming
+- Complete generation history
+- Validation results included
+- Structured metadata
 
 ## Setup
 
@@ -31,119 +67,159 @@ pip install -r requirements.txt
 3. Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env and add your OpenAI API key
+# Add your OpenAI API key to .env
+```
+
+4. Initialize knowledge base:
+```bash
+python knowledge_base/template_parser.py
 ```
 
 ## Usage
 
-Run the script:
+### Production Version
 ```bash
 python decathlon_copywriter.py
 ```
 
-The script will:
-1. Process multiple content components (titles, copy, etc.)
-2. Generate marketing copy using OpenAI with sport-specific context
-3. Validate content against character limits and requirements
-4. Track generation attempts and provide detailed feedback
-5. Display results and any errors
+### Development Version
+```bash
+python decathlon_copywriter_dev.py
+```
 
-## Architecture
+The system will:
+1. Load the knowledge base
+2. Process content components
+3. Generate sport-specific marketing copy
+4. Validate against requirements
+5. Export results to JSON files
 
-- **State Management**: Uses TypedDict for state handling with proper typing
-- **Workflow**: Implements a directed graph with conditional paths
-- **Content Generation**: Leverages OpenAI's GPT-4 model with retry logic
-- **Validation**: Checks character limits and content quality
-- **History Tracking**: Maintains generation attempts and feedback with proper attempt counting
+## Component Types
 
-## Current Implementation
+Currently supported components:
+- Headline Basic (Introduction Copy)
+- Category Lifestyle CTA
+- Advice (Title, Copy, CTA)
+- Product (Title, Subtitle)
+- Banner (Headline, Copy, CTA)
 
-- Sport-specific content generation
-- Character limit validation
-- Generation attempt tracking
-- Proper state management using TypedDict
-- Retry logic for API calls
-- Detailed feedback system
+Each component includes:
+- Character limits
+- Example texts
+- Specific rules
+- Validation requirements
 
-## Immediate Next Steps
+## Development Status
 
-1. **Component Schema Implementation**
-   - Create JSON schema for email components
-   - Implement component configuration loader
-   - Example structure:
-     ```json
-     {
-       "KIT_3_LEFT": {
-         "title": {
-           "char_limit": 50,
-           "required": true,
-           "style_rules": ["no_exclamation", "no_ellipsis"]
-         },
-         "copy": {
-           "char_limit": 200,
-           "required": true,
-           "style_rules": ["no_direct_address"]
-         }
-       }
-     }
-     ```
+### Recently Completed
+- Knowledge base integration
+- Template-based generation
+- Export functionality
+- Component type system
+- Example-based learning
 
-2. **Enhanced Validation System**
-   - Add style rule validation
-   - Implement tone checking
-   - Add component-specific validation rules
-   - Enhance feedback quality for regeneration attempts
+### In Progress
+- Enhanced validation rules
+- Style consistency checks
+- Performance optimization
+- Error handling improvements
 
-3. **Content Generation Improvements**
-   - Add template support
-   - Implement style consistency checks
-   - Add context-aware generation
-   - Improve prompt engineering based on feedback
+### Planned Features
+1. Style Rule Enforcement
+   - Tone consistency
+   - Brand voice validation
+   - Language style checks
 
-## Development Priorities
+2. Template Enhancement
+   - Dynamic template selection
+   - Context-aware generation
+   - Improved example matching
 
-1. **Component Configuration**
-   - Create configuration loader
-   - Implement component validation rules
-   - Add template support
+3. Export System Enhancement
+   - Multiple export formats
+   - Batch processing
+   - Export aggregation
 
-2. **Validation Enhancement**
-   - Implement style rules validation
-   - Add tone checking
-   - Enhance feedback system
+## Technical Details
 
-3. **Testing Framework**
-   - Add unit tests
-   - Create integration tests
-   - Implement automated testing pipeline
+### State Management
+```python
+@dataclass(frozen=True)
+class CopyComponent:
+    name: str
+    char_limit: int
+    briefing: str
+    audience: str
+    component_type: str
+    element_type: str
+    max_attempts: int = 3
+    url: Optional[str] = None
+```
 
-## Future Extensions
+### Knowledge Base Structure
+```python
+class ComponentTemplate:
+    component_type: str
+    element_type: str
+    char_limit: int
+    examples: List[ComponentExample]
+    rules: List[str]
+```
 
-1. **Knowledge Base Integration**
-   - Implement structured knowledge base
-   - Add sport-specific terminology
-   - Create template management
-
-2. **System Improvements**
-   - Add human review integration
-   - Implement memory management
-   - Add performance metrics
-   - Enhance error handling
-
-## Current Limitations
-
-- Basic character limit validation only
-- No style rule enforcement
-- Limited template support
-- No persistent storage
+### Export Format
+```json
+{
+  "timestamp": "ISO-8601 timestamp",
+  "component": {
+    "name": "component_name",
+    "type": "component_type",
+    "element": "element_type",
+    "audience": "target_audience",
+    "char_limit": 000,
+    "briefing": "briefing_text"
+  },
+  "generation_result": {
+    "final_content": "generated_text",
+    "char_count": 000,
+    "status": "status_code",
+    "total_attempts": 0
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "generated_text",
+      "feedback": "validation_feedback",
+      "validation": {
+        "char_count": 000,
+        "within_limit": true/false,
+        "is_empty": true/false
+      }
+    }
+  ]
+}
+```
 
 ## Contributing
 
-Please refer to CONTRIBUTING.md for guidelines on how to contribute to this project.
+1. Use the development version (`decathlon_copywriter_dev.py`) for new features
+2. Maintain knowledge base structure when adding components
+3. Update tests for new functionality
+4. Document changes in code and README
+
+## Current Limitations
+
+- Single language support (German)
+- Sequential processing only
+- Limited style rule enforcement
+- Basic error recovery
+
+## License
+
+Proprietary - All rights reserved
 ```
 
 Would you like me to:
-1. Add more technical details to any section?
-2. Create separate documentation for the component schema?
-3. Add implementation examples for the next steps?
-4. Create a development roadmap with timelines?
+1. Add more technical documentation for any specific feature?
+2. Create separate documentation for the knowledge base system?
+3. Add more example configurations?
+4. Detail the development workflow?
