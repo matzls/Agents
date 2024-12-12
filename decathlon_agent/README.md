@@ -1,4 +1,6 @@
-Based on your request and looking at your live screen share, here's the complete README.md file ready for copy-paste:
+Looking at your screen share, I can see your Git commit history which shows several important updates including character and token limit handling, gitignore additions, and README changes. Based on these recent changes, I'll provide an updated README that incorporates all the latest features and changes.
+
+Here's the complete updated README.md:
 
 ```markdown
 # Decathlon CRM Copywriter
@@ -13,11 +15,14 @@ decathlon_agent/
 │   ├── template_kb.py         # Knowledge base classes and loading functions
 │   ├── template_parser.py     # Excel to JSON parser for templates
 │   └── decathlon_template_kb.json  # Generated knowledge base
+├── studio/                    # LangGraph Studio compatible versions
+│   └── decathlon_copywriter_agent_dev_studio.py
 ├── exports/                   # Generated copy outputs
+│   └── copy_export_[timestamp]_[component].json
 ├── decathlon_copywriter.py    # Stable production version
 ├── decathlon_copywriter_dev.py # Development version with latest features
-├── decathlon_copywriter_agent_studio.py # LangGraph Studio compatible version
 ├── .env                      # Environment configuration
+├── .gitignore               # Git configuration
 └── requirements.txt          # Project dependencies
 ```
 
@@ -26,10 +31,10 @@ decathlon_agent/
 ### Core Features
 - Graph-based workflow management with LangGraph
 - OpenAI GPT-4 integration via LangChain
-- TypedDict-based state management
+- Pydantic-based state management
 - Structured knowledge base for templates and examples
-- Component-based content generation with strict character limits
-- Enhanced validation system for content quality checks
+- Component-based content generation with strict character and token limits
+- Enhanced validation system with centralized functions
 - Export functionality for generated content
 
 ### Knowledge Base
@@ -40,16 +45,18 @@ decathlon_agent/
 - Automated JSON conversion
 
 ### Validation System
-- Character limit validation with detailed feedback
+- Dual validation: character and token limits
+- Centralized cleaning and validation functions
 - Content quality checks including length and emptiness
 - Generation attempt tracking with comprehensive error handling
-- Improved feedback system for user guidance
+- Enhanced feedback system with specific character and token count guidance
+- Cached token counting for performance
 
 ### Export System
-- JSON-based export format
-- Timestamp-based file naming
+- JSON-based export format with timestamps
+- Component-specific export files
 - Complete generation history
-- Validation results included
+- Detailed validation results including token metrics
 - Structured metadata
 
 ## Setup
@@ -89,18 +96,22 @@ python decathlon_copywriter_dev.py
 ```
 
 ### LangGraph Studio Version
-The studio version can be run directly in LangGraph Studio with the following input format:
+The studio version accepts input in the following format:
 ```json
-[
-  {
-    "name": "headline_swimming",
-    "char_limit": 30,
-    "briefing": "Ab ins Wasser und richtig auspowern",
-    "audience": "Schwimmen",
-    "component_type": "headline",
-    "element_type": "title"
-  }
-]
+{
+  "components": [
+    {
+      "name": "swimming_title",
+      "char_limit": 30,
+      "token_limit": 10,
+      "briefing": "Ab ins Wasser - kurze, knackige Motivation",
+      "audience": "Schwimmen",
+      "component_type": "headline",
+      "element_type": "title"
+    }
+  ],
+  "max_attempts": 3
+}
 ```
 
 Example usage in LangGraph Studio:
@@ -110,36 +121,73 @@ Example usage in LangGraph Studio:
 
 The system will:
 1. Generate sport-specific marketing copy
-2. Validate against requirements (character limits, content rules)
+2. Validate against requirements (character and token limits, content rules)
 3. Export results to JSON files
 4. Provide detailed validation feedback
 
-## Component Types
+## Technical Details
 
-Currently supported components:
-- Headline Basic (Introduction Copy)
-- Category Lifestyle CTA
-- Advice (Title, Copy, CTA)
-- Product (Title, Subtitle)
-- Banner (Headline, Copy, CTA)
+### State Management
+```python
+class CopyComponent(BaseModel):
+    name: str
+    char_limit: int
+    briefing: str
+    audience: str
+    component_type: str
+    element_type: str
+    token_limit: int = Field(default=45)
 
-Each component includes:
-- Character limits
-- Example texts
-- Specific rules
-- Validation requirements
+class State(BaseModel):
+    input: InputSchema
+    generated_content: List[Dict[str, str]] = Field(default_factory=list)
+    errors: List[str] = Field(default_factory=list)
+    attempt_count: int = Field(default=0)
+    status: str = Field(default="")
+    messages: List[Dict[str, Any]] = Field(default_factory=list)
+    generation_history: List[Dict[str, Any]] = Field(default_factory=list)
+```
+
+### Validation Functions
+```python
+def validate_limits(content: str, char_limit: int, token_limit: int) -> Dict[str, Any]
+def clean_content(content: str) -> str
+def generate_feedback(validation_results: Dict[str, Any], char_limit: int, token_limit: int) -> List[str]
+```
+
+### Export Format
+```json
+{
+  "timestamp": "ISO-8601 timestamp",
+  "status": "status_code",
+  "total_attempts": 0,
+  "components": [
+    {
+      "name": "component_name",
+      "content": "generated_text",
+      "validation": {
+        "char_count": 000,
+        "token_count": 000,
+        "within_char_limit": true/false,
+        "within_token_limit": true/false,
+        "is_empty": true/false
+      }
+    }
+  ],
+  "generation_history": []
+}
+```
 
 ## Development Status
 
 ### Recently Completed
-- Knowledge base integration
-- Template-based generation
-- Export functionality
-- Component type system
-- Example-based learning
+- Token limit implementation alongside character limits
+- Centralized validation functions
+- Enhanced export file naming and organization
+- Pydantic model integration
+- LangGraph Studio compatibility improvements
 
 ### In Progress
-- Enhanced validation rules
 - Style consistency checks
 - Performance optimization
 - Error handling improvements
@@ -160,92 +208,6 @@ Each component includes:
    - Batch processing
    - Export aggregation
 
-## Technical Details
-
-### LangGraph Studio Input Schema
-```python
-class CopyComponent(BaseModel):
-    name: str
-    char_limit: int
-    briefing: str
-    audience: str
-    component_type: str
-    element_type: str
-
-class InputSchema(BaseModel):
-    components: List[CopyComponent]
-    max_attempts: int = Field(default=3)
-```
-
-### State Management
-```python
-@dataclass(frozen=True)
-class CopyComponent:
-    name: str
-    char_limit: int
-    briefing: str
-    audience: str
-    component_type: str
-    element_type: str
-    max_attempts: int = 3
-    url: Optional[str] = None
-```
-
-### Knowledge Base Structure
-```python
-class ComponentTemplate:
-    component_type: str
-    element_type: str
-    char_limit: int
-    examples: List[ComponentExample]
-    rules: List[str]
-```
-
-### Export Format
-```json
-{
-  "timestamp": "ISO-8601 timestamp",
-  "component": {
-    "name": "component_name",
-    "type": "component_type",
-    "element": "element_type",
-    "audience": "target_audience",
-    "char_limit": 000,
-    "briefing": "briefing_text"
-  },
-  "generation_result": {
-    "final_content": "generated_text",
-    "char_count": 000,
-    "status": "status_code",
-    "total_attempts": 0
-  },
-  "generation_history": [
-    {
-      "attempt": 1,
-      "content": "generated_text",
-      "feedback": "validation_feedback",
-      "validation": {
-        "char_count": 000,
-        "within_limit": true/false,
-        "is_empty": true/false
-      }
-    }
-  ]
-}
-```
-
-### Validation Logic Enhancements
-- Character limits are now strictly enforced with specific guidance based on content type.
-- Detailed feedback provided for character count mismatches, including how many characters are over/under limit.
-- Improved logging for better debugging and understanding of content generation results.
-
-## Contributing
-
-1. Use the development version (`decathlon_copywriter_dev.py`) for new features
-2. Maintain knowledge base structure when adding components
-3. Update tests for new functionality
-4. Document changes in code and README
-
 ## Current Limitations
 
 - Single language support (German)
@@ -255,6 +217,24 @@ class ComponentTemplate:
 - LangGraph Studio version requires specific input format
 - Knowledge base integration limited in Studio version
 
+## Contributing
+
+1. Use the development version (`decathlon_copywriter_dev.py`) for new features
+2. Maintain knowledge base structure when adding components
+3. Update tests for new functionality
+4. Document changes in code and README
+
 ## License
 
 Proprietary - All rights reserved
+```
+
+This updated README reflects:
+1. The new Pydantic-based state management
+2. Added token management features
+3. Updated export format with token metrics
+4. Streamlined validation functions
+5. More detailed technical specifications
+6. Current export file naming convention
+7. Recent Git changes visible in your commit history
+
