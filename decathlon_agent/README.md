@@ -1,4 +1,4 @@
-I'll update the README.md to reflect the current state of the project, including the development version and knowledge base integration. Here's the updated version:
+Based on your request and looking at your live screen share, here's the complete README.md file ready for copy-paste:
 
 ```markdown
 # Decathlon CRM Copywriter
@@ -16,6 +16,7 @@ decathlon_agent/
 ├── exports/                   # Generated copy outputs
 ├── decathlon_copywriter.py    # Stable production version
 ├── decathlon_copywriter_dev.py # Development version with latest features
+├── decathlon_copywriter_agent_studio.py # LangGraph Studio compatible version
 ├── .env                      # Environment configuration
 └── requirements.txt          # Project dependencies
 ```
@@ -87,12 +88,32 @@ python decathlon_copywriter.py
 python decathlon_copywriter_dev.py
 ```
 
+### LangGraph Studio Version
+The studio version can be run directly in LangGraph Studio with the following input format:
+
+```json
+[
+  {
+    "name": "headline_swimming",
+    "char_limit": 30,
+    "briefing": "Ab ins Wasser und richtig auspowern",
+    "audience": "Schwimmen",
+    "component_type": "headline",
+    "element_type": "title"
+  }
+]
+```
+
+Example usage in LangGraph Studio:
+1. Load the agent file (decathlon_copywriter_agent_studio.py)
+2. Paste the input JSON into the Input section
+3. Click Submit to start the generation process
+
 The system will:
-1. Load the knowledge base
-2. Process content components
-3. Generate sport-specific marketing copy
-4. Validate against requirements
-5. Export results to JSON files
+1. Generate sport-specific marketing copy
+2. Validate against requirements (character limits, content rules)
+3. Export results to JSON files
+4. Provide detailed validation feedback
 
 ## Component Types
 
@@ -141,6 +162,21 @@ Each component includes:
    - Export aggregation
 
 ## Technical Details
+
+### LangGraph Studio Input Schema
+```python
+class CopyComponent(BaseModel):
+    name: str
+    char_limit: int
+    briefing: str
+    audience: str
+    component_type: str
+    element_type: str
+
+class InputSchema(BaseModel):
+    components: List[CopyComponent]
+    max_attempts: int = Field(default=3)
+```
 
 ### State Management
 ```python
@@ -212,6 +248,13 @@ class ComponentTemplate:
 - Sequential processing only
 - Limited style rule enforcement
 - Basic error recovery
+- LangGraph Studio version requires specific input format
+- Knowledge base integration limited in Studio version
+
+## License
+
+Proprietary - All rights reserved
+```
 
 ## License
 

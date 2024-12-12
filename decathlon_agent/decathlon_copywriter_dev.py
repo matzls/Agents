@@ -153,13 +153,13 @@ Briefing: {state['component'].briefing}
 WICHTIGE REGELN:
 - Keine direkte Anrede
 - Keine CTAs oder Verlinkungen im Einführungstext
-- Exakte Zeichenlänge: {state['component'].char_limit} Zeichen
+- Maximale Zeichenlänge: {state['component'].char_limit} Zeichen
 - Der Content muss spezifisch auf {state['component'].audience} ausgerichtet sein
 
 {previous_attempts_feedback}
 
 Erstelle den Text in deutscher Sprache und beachte dabei das Feedback aus vorherigen Versuchen.
-WICHTIG: Der Text MUSS EXAKT {state['component'].char_limit} Zeichen lang sein."""
+WICHTIG: Der Text darf maximal {state['component'].char_limit} Zeichen lang sein."""
 
         # Add backoff between attempts
         time.sleep(state['attempt_count'] * 2)
@@ -181,7 +181,7 @@ WICHTIG: Der Text MUSS EXAKT {state['component'].char_limit} Zeichen lang sein."
             validation_results=state['validation_results'],
             errors=state['errors'],
             attempt_count=current_attempt,
-            status=state['status'],
+            status="generation_in_progress",
             generation_history=state['generation_history']
         )
         
@@ -215,7 +215,7 @@ def validate_content(state: AgentState) -> AgentState:
     
     feedback = []
     if not validation.within_limit:
-        feedback.append(f"Der Text ist zu lang ({len(content)} Zeichen). Bitte kürze auf exakt {char_limit} Zeichen.")
+        feedback.append(f"Der Text ist zu lang ({len(content)} Zeichen). Bitte kürze auf maximal {char_limit} Zeichen.")
     if validation.is_empty:
         feedback.append("Der generierte Text ist leer. Bitte erstelle einen neuen Text.")
     
@@ -226,13 +226,16 @@ def validate_content(state: AgentState) -> AgentState:
         validation_results=validation
     )
     
+    # Update status based on validation results
+    new_status = "completed" if validation.within_limit else "validation_failed"
+    
     return AgentState(
         component=state['component'],
         generated_content=state['generated_content'],
         validation_results=validation.__dict__,
         errors=state['errors'] + feedback,
         attempt_count=current_attempt,
-        status="completed" if not feedback else state['status'],
+        status=new_status,
         generation_history=state['generation_history'] + [attempt]
     )
 
@@ -319,7 +322,7 @@ class DecathlonCopywriterAgent:
         self.tracer = LangChainTracer(project_name="Decathlon_Agent")
         
         self.llm = ChatOpenAI(
-            model="gpt-4",
+            model="gpt-4o-mini",
             temperature=0.4,
             callbacks=[self.tracer],
             max_retries=3,
@@ -380,34 +383,45 @@ if __name__ == "__main__":
     
     test_components = [
         CopyComponent(
-            name="advice_content_title",
+            name="swimming_title",
             char_limit=30,
-            briefing="Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt",
+            briefing="Ab ins Wasser - kurze, knackige Motivation",
             audience="Schwimmen",
-            component_type="advice",
-            element_type="content_title"
+            component_type="headline",
+            element_type="title"
         ),
         CopyComponent(
-            name="advice_content_copy",
+            name="swimming_copy",
             char_limit=160,
             briefing="Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt",
             audience="Schwimmen",
-            component_type="advice",
-            element_type="content_copy"
+            component_type="headline",
+            element_type="copy"
         )
     ]
     
     for component in test_components:
-        try:
+        
+            print(f"\n{'='*80}")
+            print(f"Testing component: {component.name}")
+            print(f"Character limit: {component.char_limit}")
+            print(f"{'='*80}")
+            
             result = agent.generate_copy(component)
             
-            print(f"\n{'='*50}")
-            print(f"Results for {component.name}")
-            print(f"{'='*50}")
+            # Print detailed results
+            print("\nGeneration Results:")
             print(f"Status: {result['status']}")
             print(f"Total attempts: {result['attempt_count']}")
-            print(f"\nFinal Content ({len(result['generated_content'])} chars):")
-            print(result['generated_content'])
+            print(f"\nFinal Content:")
+            print(f"Length: {len(result['generated_content'])} chars")
+            print(f"Content: {result['generated_content']}")
+            
+            # Print validation details
+            print("\nValidation Results:")
+            print(f"Character count: {result['validation_results']['char_count']}")
+            print(f"Within limit: {result['validation_results']['within_limit']}")
+            print(f"Is empty: {result['validation_results']['is_empty']}")
             
             if result['errors']:
                 print("\nErrors encountered:")
@@ -417,12 +431,5 @@ if __name__ == "__main__":
             print("\nGeneration History:")
             for attempt in result['generation_history']:
                 print(f"\nAttempt #{attempt.attempt_number}:")
-                print(f"Content ({len(attempt.content)} chars):")
-                print(attempt.content)
+                print(f"Content: {attempt.content}")
                 print(f"Feedback: {attempt.feedback}")
-            
-            # Add cooldown between components
-            time.sleep(10)
-            
-        except Exception as e:
-            logger.error(f"Error processing component {component.name}: {str(e)}")

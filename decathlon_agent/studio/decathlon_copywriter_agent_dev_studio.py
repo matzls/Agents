@@ -8,6 +8,8 @@ from tenacity import retry, wait_exponential, stop_after_attempt
 from datetime import datetime
 from pathlib import Path
 from langchain_core.messages import BaseMessage, AIMessage
+import json
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s)')

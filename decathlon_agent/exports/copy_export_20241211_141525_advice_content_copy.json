@@ -1,0 +1,29 @@
+{
+  "timestamp": "2024-12-11T14:15:25.481949",
+  "component": {
+    "name": "advice_content_copy",
+    "type": "advice",
+    "element": "content_copy",
+    "audience": "Schwimmen",
+    "char_limit": 160,
+    "briefing": "Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt"
+  },
+  "generation_result": {
+    "final_content": "\"Mit jedem Zug näher an die Ziele! Beim Schwimmen den Jahresendspurt einläuten und voller Energie ins neue Jahr starten!\"",
+    "char_count": 121,
+    "status": "completed",
+    "total_attempts": 1
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "\"Mit jedem Zug näher an die Ziele! Beim Schwimmen den Jahresendspurt einläuten und voller Energie ins neue Jahr starten!\"",
+      "feedback": "Keine Probleme gefunden.",
+      "validation": {
+        "char_count": 121,
+        "within_limit": true,
+        "is_empty": false
+      }
+    }
+  ]
+}

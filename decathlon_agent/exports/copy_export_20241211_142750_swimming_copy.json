@@ -1,0 +1,29 @@
+{
+  "timestamp": "2024-12-11T14:27:50.032580",
+  "component": {
+    "name": "swimming_copy",
+    "type": "headline",
+    "element": "copy",
+    "audience": "Schwimmen",
+    "char_limit": 160,
+    "briefing": "Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt"
+  },
+  "generation_result": {
+    "final_content": "\"Zieht die Badekappe stramm, setzt die Schwimmbrille auf und taucht ein! Der Jahresendspurt im Wasser beginnt jetzt. Jede Bahn zählt!\"",
+    "char_count": 134,
+    "status": "completed",
+    "total_attempts": 1
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "\"Zieht die Badekappe stramm, setzt die Schwimmbrille auf und taucht ein! Der Jahresendspurt im Wasser beginnt jetzt. Jede Bahn zählt!\"",
+      "feedback": "Keine Probleme gefunden.",
+      "validation": {
+        "char_count": 134,
+        "within_limit": true,
+        "is_empty": false
+      }
+    }
+  ]
+}
