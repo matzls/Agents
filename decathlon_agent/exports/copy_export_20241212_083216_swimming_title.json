@@ -1,0 +1,49 @@
+{
+  "timestamp": "2024-12-12T08:32:16.854762",
+  "component": {
+    "name": "swimming_title",
+    "type": "headline",
+    "element": "title",
+    "audience": "Schwimmen",
+    "char_limit": 30,
+    "briefing": "Ab ins Wasser - kurze, knackige Motivation"
+  },
+  "generation_result": {
+    "final_content": "Text: \"Ab ins Nass! Schwimm ins Glück!\"",
+    "char_count": 39,
+    "status": "validation_failed",
+    "total_attempts": 3
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "\"Wasser marsch! Tauche ins Glück!\"",
+      "feedback": "Der Text ist zu lang (34 Zeichen). Bitte kürze auf maximal 30 Zeichen.",
+      "validation": {
+        "char_count": 34,
+        "within_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt": 2,
+      "content": "Text: \"Wasser marsch! Glückstauchgang!\"",
+      "feedback": "Der Text ist zu lang (39 Zeichen). Bitte kürze auf maximal 30 Zeichen.",
+      "validation": {
+        "char_count": 39,
+        "within_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt": 3,
+      "content": "Text: \"Ab ins Nass! Schwimm ins Glück!\"",
+      "feedback": "Der Text ist zu lang (39 Zeichen). Bitte kürze auf maximal 30 Zeichen.",
+      "validation": {
+        "char_count": 39,
+        "within_limit": false,
+        "is_empty": false
+      }
+    }
+  ]
+}

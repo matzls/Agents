@@ -1,0 +1,29 @@
+{
+  "timestamp": "2024-12-12T08:40:47.471361",
+  "component": {
+    "name": "swimming_copy",
+    "type": "headline",
+    "element": "copy",
+    "audience": "Schwimmen",
+    "char_limit": 160,
+    "briefing": "Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt"
+  },
+  "generation_result": {
+    "final_content": "Ab ins kühle Nass! Beende das Jahr mit Schwung und tauche ein in neue Bestzeiten. Schwimmen - der perfekte Jahresendspurt!",
+    "char_count": 122,
+    "status": "completed",
+    "total_attempts": 1
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "Ab ins kühle Nass! Beende das Jahr mit Schwung und tauche ein in neue Bestzeiten. Schwimmen - der perfekte Jahresendspurt!",
+      "feedback": "Keine Probleme gefunden.",
+      "validation": {
+        "char_count": 122,
+        "within_limit": true,
+        "is_empty": false
+      }
+    }
+  ]
+}

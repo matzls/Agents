@@ -1,0 +1,49 @@
+{
+  "timestamp": "2024-12-12T08:40:45.856243",
+  "component": {
+    "name": "swimming_title",
+    "type": "headline",
+    "element": "title",
+    "audience": "Schwimmen",
+    "char_limit": 30,
+    "briefing": "Ab ins Wasser - kurze, knackige Motivation"
+  },
+  "generation_result": {
+    "final_content": "Content: Ab ins Nass - Schwimmen rockt!",
+    "char_count": 39,
+    "status": "validation_failed",
+    "total_attempts": 3
+  },
+  "generation_history": [
+    {
+      "attempt": 1,
+      "content": "Schwimmen - Dein Ticket zur Erfrischung!",
+      "feedback": "Der Text ist zu lang (40 Zeichen). Bitte kürze auf maximal 30 Zeichen.",
+      "validation": {
+        "char_count": 40,
+        "within_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt": 2,
+      "content": "Content: Tauche ein in die Erfrischung!",
+      "feedback": "Der Text ist zu lang (39 Zeichen). Bitte kürze auf maximal 30 Zeichen.",
+      "validation": {
+        "char_count": 39,
+        "within_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt": 3,
+      "content": "Content: Ab ins Nass - Schwimmen rockt!",
+      "feedback": "Der Text ist zu lang (39 Zeichen). Bitte kürze auf maximal 30 Zeichen.",
+      "validation": {
+        "char_count": 39,
+        "within_limit": false,
+        "is_empty": false
+      }
+    }
+  ]
+}
