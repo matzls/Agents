@@ -28,7 +28,8 @@ decathlon_agent/
 - OpenAI GPT-4 integration via LangChain
 - TypedDict-based state management
 - Structured knowledge base for templates and examples
-- Component-based content generation
+- Component-based content generation with strict character limits
+- Enhanced validation system for content quality checks
 - Export functionality for generated content
 
 ### Knowledge Base
@@ -39,11 +40,10 @@ decathlon_agent/
 - Automated JSON conversion
 
 ### Validation System
-- Character limit validation
-- Content quality checks
-- Generation attempt tracking
-- Comprehensive error handling
-- Detailed feedback system
+- Character limit validation with detailed feedback
+- Content quality checks including length and emptiness
+- Generation attempt tracking with comprehensive error handling
+- Improved feedback system for user guidance
 
 ### Export System
 - JSON-based export format
@@ -90,7 +90,6 @@ python decathlon_copywriter_dev.py
 
 ### LangGraph Studio Version
 The studio version can be run directly in LangGraph Studio with the following input format:
-
 ```json
 [
   {
@@ -235,6 +234,11 @@ class ComponentTemplate:
 }
 ```
 
+### Validation Logic Enhancements
+- Character limits are now strictly enforced with specific guidance based on content type.
+- Detailed feedback provided for character count mismatches, including how many characters are over/under limit.
+- Improved logging for better debugging and understanding of content generation results.
+
 ## Contributing
 
 1. Use the development version (`decathlon_copywriter_dev.py`) for new features
@@ -254,15 +258,3 @@ class ComponentTemplate:
 ## License
 
 Proprietary - All rights reserved
-```
-
-## License
-
-Proprietary - All rights reserved
-```
-
-Would you like me to:
-1. Add more technical documentation for any specific feature?
-2. Create separate documentation for the knowledge base system?
-3. Add more example configurations?
-4. Detail the development workflow?
