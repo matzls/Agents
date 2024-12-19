@@ -42,6 +42,7 @@ decathlon_agent/
 - Structured knowledge base for templates and examples
 - Component-based content generation with strict character and token limits
 - Enhanced validation system with centralized functions
+- Improved duplicate content detection
 - Export functionality for generated content
 
 ### Knowledge Base
@@ -59,6 +60,8 @@ decathlon_agent/
 - Generation attempt tracking with comprehensive error handling
 - Enhanced feedback system with specific character and token count guidance
 - Cached token counting for performance
+- Duplicate content detection across generation attempts
+- Smart regeneration logic based on validation results
 
 ### Export System
 - JSON-based export format with timestamps
@@ -152,23 +155,23 @@ The system will:
 
 ### State Management
 ```python
-class CopyComponent(BaseModel):
-    name: str
-    char_limit: int
-    briefing: str
-    audience: str
+@dataclass(frozen=True)
+class CopyComponent:
     component_type: str
     element_type: str
-    token_limit: int = Field(default=45)
+    char_limit: int
+    token_limit: int
+    audience: str
+    max_attempts: int = 3
 
-class State(BaseModel):
-    input: InputSchema
-    generated_content: List[Dict[str, str]] = Field(default_factory=list)
-    errors: List[str] = Field(default_factory=list)
-    attempt_count: int = Field(default=0)
-    status: str = Field(default="")
-    messages: List[Dict[str, Any]] = Field(default_factory=list)
-    generation_history: List[Dict[str, Any]] = Field(default_factory=list)
+class AgentState(TypedDict):
+    component: CopyComponent
+    generated_content: str
+    validation_results: Dict[str, Any]
+    errors: List[str]
+    attempt_count: int
+    status: str
+    generation_history: List[Dict[str, Any]]
 ```
 
 ### Validation Functions
@@ -208,7 +211,10 @@ def generate_feedback(validation_results: Dict[str, Any], char_limit: int, token
 - Centralized validation functions
 - Enhanced export file naming and organization
 - Pydantic model integration
-- LangGraph Studio compatibility improvements
+- Improved duplicate content detection
+- Smart regeneration logic
+- Enhanced feedback system
+- Proper state management with TypedDict
 
 ### In Progress
 - Style consistency checks
@@ -231,13 +237,37 @@ def generate_feedback(validation_results: Dict[str, Any], char_limit: int, token
    - Batch processing
    - Export aggregation
 
+4. LangGraph Studio Integration
+   - Update studio version with latest features
+   - Implement new validation system
+   - Add duplicate detection
+   - Enhance state management
+
+### TODOs
+1. Update LangGraph Studio file with:
+   - New validation system
+   - Duplicate content detection
+   - Enhanced state management
+   - Improved feedback system
+   - Smart regeneration logic
+
+2. Performance Optimization
+   - Token counting optimization
+   - State management efficiency
+   - Reduced API calls
+
+3. Documentation
+   - Update API documentation
+   - Add more code examples
+   - Improve setup instructions
+
 ## Current Limitations
 
 - Single language support (German)
 - Sequential processing only
 - Limited style rule enforcement
 - Basic error recovery
-- LangGraph Studio version requires specific input format
+- LangGraph Studio version requires update to match current features
 - Knowledge base integration limited in Studio version
 
 ## Contributing

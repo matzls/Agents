@@ -1,5 +1,7 @@
 langchain
-langchain-openai
-langgraph
-pydantic
+langchain_openai
+tiktoken
+tenacity
 python-dotenv
+openai
+pydantic

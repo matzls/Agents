@@ -1,0 +1,26 @@
+{
+  "headline_basic": {
+    "Introduction Copy": {
+      "char_limit": 400,
+      "token_limit": 200,
+      "examples": [
+        {
+          "input": "Beispiel Input",
+          "expected_output": "Beispiel Output für Introduction Copy"
+        }
+      ]
+    }
+  },
+  "advice": {
+    "Content Title": {
+      "char_limit": 30,
+      "token_limit": 15,
+      "examples": [
+        {
+          "input": "Beispiel Input",
+          "expected_output": "Beispiel Output für Content Title"
+        }
+      ]
+    }
+  }
+}

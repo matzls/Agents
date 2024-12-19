@@ -1,0 +1,46 @@
+{
+  "timestamp": "2024-12-13T14:13:03.836468",
+  "status": "incomplete",
+  "components": [],
+  "generation_history": [
+    {
+      "attempt_number": 1,
+      "content": "Herbst ist da und mit ihm die perfekte Zeit, um deine Laufleidenschaft neu zu entfachen. Zieh dir warme Laufkleidung an und trotze der Kälte. Nutze unsere Running Deals und spare bis zu 50%. Mach diesen Herbst zu deinem persönlichen Lauf-Highlight. \n\nDie Tage werden kürzer, die Temperaturen sinken - aber deine Motivation bleibt unverändert hoch. Mit der richtigen Laufkleidung bist du bestens für den Herbst gerüstet. Nutze unsere Running Deals und spare bis zu 50%. Bleib aktiv und starte energiegeladen in den Winter.",
+      "feedback": "Der Text ist zu lang (521 Zeichen). Bitte kürze um ca. 121 Zeichen. Der Text hat zu viele Tokens (144 Tokens). Bitte kürze um ca. 99 Tokens.",
+      "validation_results": {
+        "char_count": 521,
+        "token_count": 144,
+        "within_char_limit": false,
+        "within_token_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt_number": 2,
+      "content": "Herbstlaufen kann eine Herausforderung sein, aber mit der richtigen Ausrüstung wird es zum Vergnügen. Unsere Running Deals bieten dir genau das: Wärmende Kleidung, die vor Regen schützt und deinen Laufspaß erhöht. Also, mach dich bereit und trotze dem Herbstwetter. \n\nDer Herbst ist nicht das Ende deines Lauftrainings, sondern der Beginn einer neuen Phase. Mit kühleren Temperaturen und der richtigen Ausrüstung kannst du deinen Lauf auf das nächste Level bringen. Nutze die Gelegenheit und mach diesen Herbst zu deinem persönlichen Lauf-Highlight.",
+      "feedback": "Der Text ist zu lang (549 Zeichen). Bitte kürze um ca. 149 Zeichen. Der Text hat zu viele Tokens (153 Tokens). Bitte kürze um ca. 108 Tokens.",
+      "validation_results": {
+        "char_count": 549,
+        "token_count": 153,
+        "within_char_limit": false,
+        "within_token_limit": false,
+        "is_empty": false
+      }
+    },
+    {
+      "attempt_number": 3,
+      "content": "Herbstzeit ist Laufzeit! Mit kühleren Temperaturen und farbenfroher Natur wird jeder Lauf zum Erlebnis. Und mit der richtigen Ausrüstung bist du bestens für jedes Wetter gerüstet. Entdecke jetzt unsere Running Deals und spare bis zu 50% auf ausgewählte Artikel. Mach diesen Herbst zu deinem Lauf-Herbst! \n\nDie Tage werden kürzer, die Temperaturen sinken - perfekte Bedingungen für alle Läufer! Mit den richtigen Outfits trotzt du jedem Wetter und legst den Grundstein für einen aktiven Winter. Nutze jetzt unsere Running Deals und spare bis zu 50%. \n\nDer Herbst ist da und mit ihm die perfekte Laufsaison. Mit unserer Auswahl an Laufbekleidung bist du für jede Witterung gerüstet. Spare jetzt bis zu 50% mit unseren Running Deals und genieße jeden Lauf in vollen Zügen. \n\nHerbstlaufen kann so schön sein! Mit den richtigen Outfits trotzt du Wind und Wetter und genießt jeden Schritt. Nutze jetzt unsere Running Deals und spare bis zu 50% auf ausgewählte Artikel. Mach diesen Herbst zu deinem Lauf-Herbst!",
+      "feedback": "Der Text ist zu lang (1004 Zeichen). Bitte kürze um ca. 604 Zeichen. Der Text hat zu viele Tokens (278 Tokens). Bitte kürze um ca. 233 Tokens.",
+      "validation_results": {
+        "char_count": 1004,
+        "token_count": 278,
+        "within_char_limit": false,
+        "within_token_limit": false,
+        "is_empty": false
+      }
+    }
+  ],
+  "errors": [
+    "Max attempts reached for component headline basic - Introduction Copy"
+  ]
+}
