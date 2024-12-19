@@ -16,9 +16,9 @@ import logging
 from tenacity import retry, wait_exponential, stop_after_attempt
 import tiktoken
 import math
-from langsmith import Client  # Reintroduced import
-from langchain.callbacks.tracers import LangChainTracer  # Reintroduced import
-import time  # Reintroduced import
+from langsmith import Client
+from langchain.callbacks.tracers import LangChainTracer
+import time
 
 # Add knowledge base import
 from knowledge_base.template_kb import get_template_kb
@@ -32,30 +32,14 @@ load_dotenv()
 
 @dataclass(frozen=True)
 class CopyComponent:
-    name: str
+    name: str  # Should correspond to 'module_element' in briefings
     token_limit: int
     char_limit: int
-    briefing: str
     audience: str
     component_type: str
     element_type: str
     max_attempts: int = 3
     url: Optional[str] = None
-
-@dataclass(frozen=True)
-class ValidationResult:
-    char_count: int
-    token_count: int
-    within_char_limit: bool
-    within_token_limit: bool
-    is_empty: bool
-
-@dataclass(frozen=True)
-class GenerationAttempt:
-    attempt_number: int
-    content: str
-    feedback: str
-    validation_results: ValidationResult
 
 class AgentState(TypedDict):
     """Main state class for the copywriting workflow."""
@@ -65,8 +49,7 @@ class AgentState(TypedDict):
     errors: List[str]
     attempt_count: int
     status: str
-    generation_history: List[GenerationAttempt]
-
+    generation_history: List[Dict[str, Any]]
 
 def create_initial_state(component: CopyComponent) -> AgentState:
     """Create initial state with proper typing."""
@@ -80,18 +63,8 @@ def create_initial_state(component: CopyComponent) -> AgentState:
         generation_history=[]
     )
 
-
 def count_tokens(text: str, model: str = "gpt-4") -> int:
-    """
-    Count the number of tokens in a given text for a specific model.
-    
-    Args:
-        text (str): The input text to tokenize.
-        model (str): The OpenAI model to use for tokenization (default: gpt-4).
-    
-    Returns:
-        int: Number of tokens in the text.
-    """
+    """Count the number of tokens in a given text for a specific model."""
     encoding = tiktoken.encoding_for_model(model)
     try:
         return len(encoding.encode(text))
@@ -99,18 +72,15 @@ def count_tokens(text: str, model: str = "gpt-4") -> int:
         logger.warning(f"Error counting tokens for model {model}: {str(e)}. Falling back to character-based estimation.")
         return estimate_tokens_by_char_count(text)
 
-
 def estimate_tokens_by_char_count(text: str) -> int:
     """Estimate token count based on character length."""
     return math.ceil(len(text) / 3)  # Roughly 3 characters per token on average
-
 
 @retry(wait=wait_exponential(multiplier=1, min=4, max=10),
        stop=stop_after_attempt(3))
 def generate_with_retry(llm, prompt: str):
     """Generate content with retry logic."""
     return llm.invoke(prompt)
-
 
 def validate_limits(content: str, char_limit: int, token_limit: int) -> Dict[str, Any]:
     """Centralized validation logic for both character and token limits."""
@@ -124,7 +94,6 @@ def validate_limits(content: str, char_limit: int, token_limit: int) -> Dict[str
         "is_empty": not content.strip()
     }
 
-
 def clean_content(content: str) -> str:
     """Centralized content cleaning logic."""
     cleaned = content.strip()
@@ -133,7 +102,6 @@ def clean_content(content: str) -> str:
         if cleaned.lower().startswith(prefix.lower()):
             cleaned = cleaned[len(prefix):].strip()
     return cleaned.strip('"')
-
 
 def generate_feedback(validation_results: Dict[str, Any], char_limit: int, token_limit: int) -> List[str]:
     """Centralized feedback generation."""
@@ -148,30 +116,28 @@ def generate_feedback(validation_results: Dict[str, Any], char_limit: int, token
         feedback.append("Der generierte Text ist leer.")
     return feedback
 
-
 def update_state(current_state: AgentState, 
                  content: str, 
                  validation_results: Dict[str, Any], 
                  feedback: List[str], 
                  status: str) -> AgentState:
     """Centralized state update logic."""
+    current_attempt = current_state['attempt_count'] + 1
+    generation_attempt = {
+        "attempt_number": current_attempt,
+        "content": content,
+        "feedback": " ".join(feedback) if feedback else "Keine Probleme gefunden.",
+        "validation_results": validation_results
+    }
     return AgentState(
         component=current_state['component'],
         generated_content=content,
         validation_results=validation_results,
         errors=current_state['errors'] + feedback,
-        attempt_count=current_state['attempt_count'],
+        attempt_count=current_attempt,
         status=status,
-        generation_history=current_state['generation_history'] + [
-            GenerationAttempt(
-                attempt_number=current_state['attempt_count'],
-                content=content,
-                feedback=" ".join(feedback) if feedback else "Keine Probleme gefunden.",
-                validation_results=ValidationResult(**validation_results)
-            )
-        ]
+        generation_history=current_state['generation_history'] + [generation_attempt]
     )
-
 
 def generate_content(state: AgentState) -> AgentState:
     """Generate copy using LLM based on component requirements."""
@@ -195,6 +161,11 @@ def generate_content(state: AgentState) -> AgentState:
 
         # Get knowledge base
         kb = get_template_kb()
+        # Fetch the briefing
+        module_element = state['component'].name  # Assuming 'name' corresponds to 'module_element'
+        briefing_text = kb.get_briefing(module_element)
+        
+        # Fetch the template
         template = kb.get_template(
             state['component'].component_type,
             state['component'].element_type
@@ -206,9 +177,9 @@ def generate_content(state: AgentState) -> AgentState:
             previous_attempts_feedback = "\nVORHERIGE VERSUCHE UND FEEDBACK:\n"
             for attempt in state['generation_history']:
                 previous_attempts_feedback += f"""
-Versuch #{attempt.attempt_number}:
-Content: {attempt.content} ({len(attempt.content)} Zeichen)
-Feedback: {attempt.feedback}
+Versuch #{attempt['attempt_number']}:
+Content: {attempt['content']} ({len(attempt['content'])} Zeichen)
+Feedback: {attempt['feedback']}
 ---"""
         
         # Get examples from knowledge base
@@ -251,13 +222,13 @@ KONTEXT UND MARKENIDENTITÄT:
 - Einfach und Direkt: Verständliche Sprache
 - Spielerisch und Energetisch: Leichter Humor und Dynamik
 
+Briefing: {briefing_text if briefing_text else ''}
+
 {specific_rules}
 
 {examples}
 
 {length_guidance}
-
-Briefing: {state['component'].briefing}
 
 WICHTIGE REGELN:
 - Keine direkte Anrede
@@ -276,12 +247,13 @@ WICHTIG: Der Text MUSS kürzer als {state['component'].char_limit} Zeichen sein.
         time.sleep(current_attempt * 2)
         
         # Generate content
-        response = generate_with_retry(ChatOpenAI(
+        llm = ChatOpenAI(
             model="gpt-4",
             temperature=0.4,
             max_retries=3,
             request_timeout=30
-        ), prompt)
+        )
+        response = generate_with_retry(llm, prompt)
         
         # Clean and validate the generated content
         new_content = clean_content(response.content)
@@ -327,7 +299,6 @@ WICHTIG: Der Text MUSS kürzer als {state['component'].char_limit} Zeichen sein.
             status="error_during_generation"
         )
 
-
 def validate_content(state: AgentState) -> AgentState:
     """Validate the generated content against requirements."""
     logger.info("Starting content validation")
@@ -361,7 +332,6 @@ def validate_content(state: AgentState) -> AgentState:
         status=new_status
     )
 
-
 def should_regenerate(state: AgentState) -> str:
     """Determine if content should be regenerated based on validation and attempt count."""
     validation_results = state['validation_results']
@@ -384,7 +354,6 @@ def should_regenerate(state: AgentState) -> str:
     
     return END
 
-
 def export_results(state: AgentState) -> AgentState:
     """Export the generated content and metadata to a JSON file."""
     logger.info("Exporting results to JSON")
@@ -397,8 +366,7 @@ def export_results(state: AgentState) -> AgentState:
             "element": state['component'].element_type,
             "audience": state['component'].audience,
             "token_limit": state['component'].token_limit,
-            "char_limit": state['component'].char_limit,
-            "briefing": state['component'].briefing
+            "char_limit": state['component'].char_limit
         },
         "generation_result": {
             "final_content": state['generated_content'],
@@ -407,29 +375,14 @@ def export_results(state: AgentState) -> AgentState:
             "status": state['status'],
             "total_attempts": state['attempt_count']
         },
-        "generation_history": [
-            {
-                "attempt": attempt.attempt_number,
-                "content": attempt.content,
-                "token_count": attempt.validation_results.token_count,
-                "feedback": attempt.feedback,
-                "validation": {
-                    "char_count": attempt.validation_results.char_count,
-                    "token_count": attempt.validation_results.token_count,
-                    "within_char_limit": attempt.validation_results.within_char_limit,
-                    "within_token_limit": attempt.validation_results.within_token_limit,
-                    "is_empty": attempt.validation_results.is_empty
-                }
-            }
-            for attempt in state['generation_history']
-        ]
+        "generation_history": state['generation_history']
     }
     
     export_dir = Path("exports")
     export_dir.mkdir(exist_ok=True)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"copy_export_{timestamp}_{state['component'].name}.json"
+    filename = f"copy_export_{timestamp}_{state['component'].name.replace(' ', '_')}.json"
     export_path = export_dir / filename
     
     with open(export_path, 'w', encoding='utf-8') as f:
@@ -502,22 +455,20 @@ if __name__ == "__main__":
     
     test_components = [
         CopyComponent(
-            name="swimming_title",
-            token_limit=10,  # Approximately 30-35 characters
-            char_limit=30,
-            briefing="Ab ins Wasser - kurze, knackige Motivation",
-            audience="Schwimmen",
-            component_type="headline",
-            element_type="title"
-        ),
-        CopyComponent(
-            name="swimming_copy",
+            name="headline basic headline",
             token_limit=45,  # Approximately 160 characters
             char_limit=160,
-            briefing="Ab ins Wasser und richtig auspowern - motiviere die Schwimmer zum Jahresendspurt",
             audience="Schwimmen",
-            component_type="headline",
-            element_type="copy"
+            component_type="headline basic",
+            element_type="headline"
+        ),
+        CopyComponent(
+            name="KIT_3_LEFT title",
+            token_limit=10,  # Approximately 30-35 characters
+            char_limit=25,
+            audience="Schwimmen",
+            component_type="KIT_3_LEFT",
+            element_type="title"
         )
     ]
     
@@ -553,10 +504,10 @@ if __name__ == "__main__":
             
             print("\nGeneration History:")
             for attempt in result['generation_history']:
-                print(f"\nAttempt #{attempt.attempt_number}:")
-                print(f"Content: {attempt.content}")
-                print(f"Tokens: {attempt.validation_results.token_count}")
-                print(f"Feedback: {attempt.feedback}")
+                print(f"\nAttempt #{attempt['attempt_number']}:")
+                print(f"Content: {attempt['content']}")
+                print(f"Tokens: {attempt['validation_results']['token_count']}")
+                print(f"Feedback: {attempt['feedback']}")
             
             # Add cooldown between components
             time.sleep(5)

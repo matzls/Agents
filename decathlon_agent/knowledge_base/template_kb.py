@@ -9,9 +9,7 @@ from pathlib import Path
 
 @dataclass
 class ComponentExample:
-    briefing: str
-    output: str
-    context: str
+    output: str  # Adjusted based on our JSON structure
 
 @dataclass
 class ComponentTemplate:
@@ -22,37 +20,50 @@ class ComponentTemplate:
     rules: List[str]
 
 class TemplateKnowledgeBase:
-    def __init__(self, templates: Dict[str, ComponentTemplate]):
+    def __init__(self, templates: Dict[str, ComponentTemplate], briefings: Dict[str, Dict[str, str]]):
         self.templates = templates
+        self.briefings = briefings
     
     @classmethod
     def load(cls) -> 'TemplateKnowledgeBase':
-        """Load the knowledge base from the JSON file."""
+        """Load the knowledge base from the JSON files."""
         kb_path = Path(__file__).parent / "decathlon_template_kb.json"
+        briefings_path = Path(__file__).parent / "briefings.json"
         
+        # Load templates
         with open(kb_path, 'r', encoding='utf-8') as f:
-            kb_dict = json.load(f)
+            templates_list = json.load(f)
         
-        templates = {
-            name: ComponentTemplate(
+        templates = {}
+        for data in templates_list:
+            key = f"{data['component_type']}_{data['element_type']}".lower()
+            templates[key] = ComponentTemplate(
                 component_type=data["component_type"],
                 element_type=data["element_type"],
                 char_limit=data["char_limit"],
-                examples=[ComponentExample(**ex) for ex in data["examples"]],
-                rules=data["rules"]
+                examples=[ComponentExample(**ex) for ex in data.get("examples", [])],
+                rules=data.get("rules", [])
             )
-            for name, data in kb_dict.items()
-        }
         
-        return cls(templates=templates)
+        # Load briefings
+        with open(briefings_path, 'r', encoding='utf-8') as f:
+            briefings_dict = json.load(f)
+        
+        briefings = briefings_dict  # Keys are module_elements
+        
+        return cls(templates=templates, briefings=briefings)
     
     def get_template(self, component_type: str, element_type: str) -> Optional[ComponentTemplate]:
         """Get a template by component and element type."""
         key = f"{component_type}_{element_type}".lower()
         return self.templates.get(key)
     
+    def get_briefing(self, module_element: str) -> Optional[Dict[str, str]]:
+        """Get the briefing data for a given module element."""
+        return self.briefings.get(module_element.lower())
+    
     def get_examples_for_component(self, component_type: str, element_type: str, 
-                                 max_examples: int = 2) -> List[ComponentExample]:
+                                   max_examples: int = 2) -> List[ComponentExample]:
         """Get relevant examples for a component type."""
         template = self.get_template(component_type, element_type)
         if template:

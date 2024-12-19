@@ -14,11 +14,18 @@ decathlon_agent/
 ├── knowledge_base/
 │   ├── template_kb.py         # Knowledge base classes and loading functions
 │   ├── template_parser.py     # Excel to JSON parser for templates
-│   └── decathlon_template_kb.json  # Generated knowledge base
+│   ├── decathlon_template_kb.json  # Generated template knowledge base
+│   └── briefings.json        # Generated briefings knowledge base
+├── docs/
+│   ├── DECATHLON_CRM_Email-copy-elements.xlsx  # Email component templates
+│   └── 20241104_SchwimmenJahresende_Briefing_clean.xlsx  # Briefing data
 ├── studio/                    # LangGraph Studio compatible versions
 │   └── decathlon_copywriter_agent_dev_studio.py
 ├── exports/                   # Generated copy outputs
 │   └── copy_export_[timestamp]_[component].json
+├── parse_briefing.py         # Briefing Excel to JSON parser
+├── generate_test_components.py # Test component generator
+├── test_components.json      # Test component configurations
 ├── decathlon_copywriter.py    # Stable production version
 ├── decathlon_copywriter_dev.py # Development version with latest features
 ├── .env                      # Environment configuration
@@ -38,11 +45,12 @@ decathlon_agent/
 - Export functionality for generated content
 
 ### Knowledge Base
-- Excel-based template management
-- Structured component templates
+- Excel-based template and briefing management
+- Structured component templates and briefings
 - Example-based generation
 - Sport-specific rules and guidelines
-- Automated JSON conversion
+- Automated JSON conversion for both templates and briefings
+- Support for multiple briefing types and audiences
 
 ### Validation System
 - Dual validation: character and token limits
@@ -59,12 +67,18 @@ decathlon_agent/
 - Detailed validation results including token metrics
 - Structured metadata
 
+### Testing and Development
+- Test component generation utilities
+- Configurable test cases via JSON
+- Development environment with latest features
+- Studio integration for visual workflow development
+
 ## Setup
 
 1. Create and activate a virtual environment:
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Unix/macOS
+python3 -m venv decathlon_venv
+source decathlon_venv/bin/activate  # On Unix/macOS
 ```
 
 2. Install dependencies:
@@ -80,7 +94,16 @@ cp .env.example .env
 
 4. Initialize knowledge base:
 ```bash
+# Parse email component templates
 python knowledge_base/template_parser.py
+
+# Parse briefing data
+python parse_briefing.py
+```
+
+5. Generate test components (optional):
+```bash
+python generate_test_components.py
 ```
 
 ## Usage
@@ -238,3 +261,7 @@ This updated README reflects:
 6. Current export file naming convention
 7. Recent Git changes visible in your commit history
 
+
+
+TODO:
+- check if the character limit generated in the component is really matching the character limit of the email components. I go the feeling the matching of the elements form email_components and the briefing file is not really working yet. 

@@ -1,53 +1,54 @@
 """
-Tool to parse Excel template into JSON knowledge base.
-Run this script when the template file changes.
+Tool to parse Excel templates into JSON knowledge base.
+Run this script when the template files change.
 """
 
 import pandas as pd
 from pathlib import Path
 import json
-from typing import Dict, List, Any
+from typing import Dict, Any, List
 
-def parse_excel_to_kb(excel_path: str) -> Dict[str, Any]:
-    """Parse the Excel template file into a knowledge base dictionary."""
+def parse_email_components_excel(excel_path: str) -> List[Dict[str, Any]]:
+    """Parse the Email Components Excel file into a list of templates."""
     df = pd.read_excel(excel_path)
     
-    # Initialize templates dictionary
-    templates = {}
+    templates = []
     
-    # Iterate through rows and build templates
     for _, row in df.iterrows():
         # Skip rows with missing essential data
         if pd.isna(row['Component']) or pd.isna(row['Text element']):
             continue
         
-        # Create component key
-        component_key = f"{row['Component']}_{row['Text element']}".lower()
+        # Extract data
+        component_type = str(row['Component']).strip()
+        element_type = str(row['Text element']).strip()
+        char_limit = int(row['Character limitation']) if not pd.isna(row['Character limitation']) else 0
+        general_topic = str(row['General topic']).strip() if not pd.isna(row['General topic']) else ""
+        specific_briefing = str(row['Specific briefing']).strip() if not pd.isna(row['Specific briefing']) else ""
+        expected_output = str(row['Expected output']).strip() if not pd.isna(row['Expected output']) else ""
         
-        # Extract rules from the row
+        # Extract rules from general and specific briefings
         rules = []
-        if not pd.isna(row['General topic']):
-            rules.extend([rule.strip() for rule in str(row['General topic']).split('\n') if rule.strip()])
+        if general_topic:
+            rules.extend([rule.strip() for rule in general_topic.split('\n') if rule.strip()])
+        if specific_briefing:
+            rules.extend([rule.strip() for rule in specific_briefing.split('\n') if rule.strip()])
         
         # Create example dictionary
         example = {
-            "briefing": str(row['Specific briefing']) if not pd.isna(row['Specific briefing']) else "",
-            "output": str(row['Expected output']) if not pd.isna(row['Expected output']) else "",
-            "context": str(row['Component'])  # Using component as context
+            "output": expected_output
         }
         
-        # Update or create template
-        if component_key in templates:
-            templates[component_key]['examples'].append(example)
-            templates[component_key]['rules'].extend([r for r in rules if r not in templates[component_key]['rules']])
-        else:
-            templates[component_key] = {
-                "component_type": row['Component'],
-                "element_type": row['Text element'],
-                "char_limit": int(row['Character limitation']) if not pd.isna(row['Character limitation']) else 0,
-                "examples": [example],
-                "rules": rules
-            }
+        # Create template dictionary
+        template = {
+            "component_type": component_type,
+            "element_type": element_type,
+            "char_limit": char_limit,
+            "examples": [example] if expected_output else [],
+            "rules": rules
+        }
+        
+        templates.append(template)
     
     return templates
 
@@ -55,14 +56,15 @@ def main():
     # Get the current file's directory (knowledge_base folder)
     current_dir = Path(__file__).parent
     
-    # Input and output paths
-    excel_path = current_dir.parent / "DECATHLON_CRM_Email-copy-elements.xlsx"
-    output_path = current_dir / "decathlon_template_kb.json"
+    # Input paths
+    email_components_excel_path = current_dir.parent / "docs" / "DECATHLON_CRM_Email-copy-elements.xlsx"
     
-    print(f"Parsing template file: {excel_path}")
+    # Output path
+    templates_output_path = current_dir / "decathlon_template_kb.json"
     
-    # Parse Excel to knowledge base
-    kb_dict = parse_excel_to_kb(str(excel_path))
+    print(f"Parsing Email Components Excel file: {email_components_excel_path}")
+    # Parse Email Components
+    templates = parse_email_components_excel(str(email_components_excel_path))
     
     # Add global rules to each template
     global_rules = [
@@ -74,14 +76,14 @@ def main():
         "Avoid technical jargon"
     ]
     
-    for template in kb_dict.values():
+    for template in templates:
         template['rules'].extend([rule for rule in global_rules if rule not in template['rules']])
     
-    # Save to JSON
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(kb_dict, f, ensure_ascii=False, indent=2)
+    # Save templates to JSON
+    with open(templates_output_path, 'w', encoding='utf-8') as f:
+        json.dump(templates, f, ensure_ascii=False, indent=2)
     
-    print(f"Knowledge base saved to: {output_path}")
+    print(f"Templates saved to: {templates_output_path}")
     print("Done!")
 
 if __name__ == "__main__":

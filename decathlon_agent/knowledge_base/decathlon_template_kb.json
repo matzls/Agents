@@ -1,31 +1,55 @@
-{
-  "headline basic_introduction copy": {
+[
+  {
     "component_type": "headline basic",
     "element_type": "Introduction Copy",
     "char_limit": 400,
     "examples": [
       {
-        "briefing": "",
-        "output": "ok, das war’s für dieses Jahr, die kurze Laufkleidung kann zurück in den Schrank. Damit du deine Motivation trotz der herbstlichen Kälte hochhalten kannst, brauchst du jetzt Kleidung, die dich wärmt, vor Regen schützt und ordentlich pusht. \n\nEin Glück, dass genau jetzt unsere Running Deals laufen. Also ran an die Running-Angebote und bis zu 50 % sparen.",
-        "context": "headline basic"
-      },
-      {
-        "briefing": "",
-        "output": "der Herbst ist immer auch ein Neuanfang: kürzere Tage, kühlere Temperaturen, gemütliche Atmosphäre. Gleichzeitig herrschen aber auch ideale Bedingungen, um aktiv zu bleiben – und wer jetzt weitersportelt, legt den Grundstein für einen energiegeladenen Winter. Also warte nicht auf bessere Zeiten: Mach diesen Herbst zu deinem.",
-        "context": "headline basic"
-      },
-      {
-        "briefing": "",
-        "output": "bald beginnt in Frankreich die härteste Einhandregatta der Welt: einmal um den gesamten Globus. Mit unserem Segel-Equipment bist du aber auch perfekt gerüstet, wenn du kleinere Ziele anpeilst. Also setz die Segel und los geht’s! ⛵\n\nWackelnde Nussschalen sind nicht so dein Ding? Dann genieße Wind und Wellen beim Windsurfen oder entdecke andere Wassersportarten, die genauso viel Freude bereiten. 🏄",
-        "context": "headline basic"
+        "output": "ok, das war’s für dieses Jahr, die kurze Laufkleidung kann zurück in den Schrank. Damit du deine Motivation trotz der herbstlichen Kälte hochhalten kannst, brauchst du jetzt Kleidung, die dich wärmt, vor Regen schützt und ordentlich pusht. \n\nEin Glück, dass genau jetzt unsere Running Deals laufen. Also ran an die Running-Angebote und bis zu 50 % sparen."
       }
     ],
     "rules": [
       "Das Wetter wird wieder kühler, die kurze Laufbekleidung kommt in den Schrank.",
       "Damit du aber nicht auf deine Läufe verzichten musst, statte dich jetzt aus, und falle nicht ins Herbstloch",
       "Wie passend, dass genau jetzt auch die Running Deals anstehen und du bis zu XX % sparen kannst",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "headline basic",
+    "element_type": "Introduction Copy",
+    "char_limit": 400,
+    "examples": [
+      {
+        "output": "der Herbst ist immer auch ein Neuanfang: kürzere Tage, kühlere Temperaturen, gemütliche Atmosphäre. Gleichzeitig herrschen aber auch ideale Bedingungen, um aktiv zu bleiben – und wer jetzt weitersportelt, legt den Grundstein für einen energiegeladenen Winter. Also warte nicht auf bessere Zeiten: Mach diesen Herbst zu deinem."
+      }
+    ],
+    "rules": [
       "Der Herbst bringt kühle Tage, kürzere Abende, bunte Blätter und eine gemütliche Atmosphäre mit sich. Die Tage werden kürzer und die Dunkelheit kommt schneller. Gerade in dieser Jahreszeit ist es wichtig, aktiv zu bleiben und auf die Gesundheit zu achten.",
       "\"Im Herbst wieder richtig anpacken\"",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "headline basic",
+    "element_type": "Introduction Copy",
+    "char_limit": 400,
+    "examples": [
+      {
+        "output": "bald beginnt in Frankreich die härteste Einhandregatta der Welt: einmal um den gesamten Globus. Mit unserem Segel-Equipment bist du aber auch perfekt gerüstet, wenn du kleinere Ziele anpeilst. Also setz die Segel und los geht’s! ⛵\n\nWackelnde Nussschalen sind nicht so dein Ding? Dann genieße Wind und Wellen beim Windsurfen oder entdecke andere Wassersportarten, die genauso viel Freude bereiten. 🏄"
+      }
+    ],
+    "rules": [
       "Das größte Segelevent (Vendée Globe) steht wieder an, das heißt voller Fokus auf die besten Segler und Seglerinnen der Welt.",
       "Wenn du auch das Meer erobern willst und das Wasser beherrschen willst, starte jetzt durch!",
       "Segeln ist ist dir doch etwas suspekt?",
@@ -38,34 +62,20 @@
       "Avoid technical jargon"
     ]
   },
-  "category lifestyle cta_category title": {
+  {
     "component_type": "category lifestyle CTA",
     "element_type": "Category Title",
     "char_limit": 40,
     "examples": [
       {
-        "briefing": "Jetzt dein Wintersportausrüstung zurückgeben\nLink: https://www.decathlon.de/second-life/buy-back-home ",
-        "output": "Verkauf uns dein Wintersport-Equipment",
-        "context": "category lifestyle CTA"
-      },
-      {
-        "briefing": "Kinder Sportbekleidung\nhttps://www.decathlon.de/kinder/sportbekleidung",
-        "output": "Für goldenene Herbstmomente",
-        "context": "category lifestyle CTA"
-      },
-      {
-        "briefing": "Auch am kühlen Herbstabend noch aktiv sein\nhttps://www.decathlon.de/boutique-kategorien/thermo-unterwasche",
-        "output": "Deine zweite Haut für jedes Workout",
-        "context": "category lifestyle CTA"
+        "output": "Verkauf uns dein Wintersport-Equipment"
       }
     ],
     "rules": [
       "Dein Sportprodukt begleitet dich jetzt seit einem Jahr / seit zwei Jahren. Wir sind uns sicher, ihr habt schon das ein oder andere Abenteuer erlebt, den ein oder anderen Schweißtropfen gemeinsam vergossen. Du bist heute ein anderer Mensch als vor einem jahr / zwei Jahren. Ist dein Sportgerät noch das richtige für dich? Falls sich eure Wege trennen - kannst du ganz einfach unseren buy Back Service nutzen. Du verkaufst so dein gebrauchtes Equipment an uns zurück, un erhältt von uns einen aktuellen gegenwert als Gutschein. Wir prüfen dein Produkt und geben es über Second Use wieder in den Verkauf, um den nächsten Sportler:innen ihre sportlichen Ziele näher zu bringen. Win win für alle.",
       "Bitte auf Nachhaltigkeitsthemen achten beim formulieren - lieber auf die vorteile für den Kunden gehen als auf die für die Umwelt",
-      "Damit die Kids auch bei dem immer kühler werdenenden Wetter aktiv bleiben und ihren Sport voll ausleben können",
-      "Insgesamt unter dem Dach der Autumn-Kampagne",
-      "Die Natur wechselt die Farbe von Grün zu einem wunderschönen rot-orange",
-      "Perfekt, um sie bei deinem Sport zu genießen und die letzten warmen Sonnenstrahlen aufzusaugen und mit einem guten Gefühl in die kühle Jahreszeit zu starten",
+      "Jetzt dein Wintersportausrüstung zurückgeben",
+      "Link: https://www.decathlon.de/second-life/buy-back-home",
       "Use friendly and inviting tone",
       "Maintain brand voice",
       "Be concise and direct",
@@ -74,25 +84,13 @@
       "Avoid technical jargon"
     ]
   },
-  "category lifestyle cta_cta": {
+  {
     "component_type": "category lifestyle CTA",
     "element_type": "CTA",
     "char_limit": 30,
     "examples": [
       {
-        "briefing": "",
-        "output": "DIREKT ZU BUY BACK",
-        "context": "category lifestyle CTA"
-      },
-      {
-        "briefing": "",
-        "output": "ZUR KINDER-SPORTKLEIDUNG",
-        "context": "category lifestyle CTA"
-      },
-      {
-        "briefing": "",
-        "output": "ZUR THERMO-UNTERWÄSCHE",
-        "context": "category lifestyle CTA"
+        "output": "DIREKT ZU BUY BACK"
       }
     ],
     "rules": [
@@ -104,25 +102,93 @@
       "Avoid technical jargon"
     ]
   },
-  "advice_content title": {
+  {
+    "component_type": "category lifestyle CTA",
+    "element_type": "Category Title",
+    "char_limit": 40,
+    "examples": [
+      {
+        "output": "Für goldenene Herbstmomente"
+      }
+    ],
+    "rules": [
+      "Damit die Kids auch bei dem immer kühler werdenenden Wetter aktiv bleiben und ihren Sport voll ausleben können",
+      "Insgesamt unter dem Dach der Autumn-Kampagne",
+      "Kinder Sportbekleidung",
+      "https://www.decathlon.de/kinder/sportbekleidung",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "category lifestyle CTA",
+    "element_type": "CTA",
+    "char_limit": 30,
+    "examples": [
+      {
+        "output": "ZUR KINDER-SPORTKLEIDUNG"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "category lifestyle CTA",
+    "element_type": "Category Title",
+    "char_limit": 40,
+    "examples": [
+      {
+        "output": "Deine zweite Haut für jedes Workout"
+      }
+    ],
+    "rules": [
+      "Die Natur wechselt die Farbe von Grün zu einem wunderschönen rot-orange",
+      "Perfekt, um sie bei deinem Sport zu genießen und die letzten warmen Sonnenstrahlen aufzusaugen und mit einem guten Gefühl in die kühle Jahreszeit zu starten",
+      "Auch am kühlen Herbstabend noch aktiv sein",
+      "https://www.decathlon.de/boutique-kategorien/thermo-unterwasche",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "category lifestyle CTA",
+    "element_type": "CTA",
+    "char_limit": 30,
+    "examples": [
+      {
+        "output": "ZUR THERMO-UNTERWÄSCHE"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
     "component_type": "advice",
     "element_type": "Content Title",
     "char_limit": 30,
     "examples": [
       {
-        "briefing": "Damit meisterst du jede Welle bei jedem Wetter und lässt dich nciht unterkriegen\nhttps://www.decathlon.de/alle-sportarten-a-z/wassersport-welt/offshore-pro-series ",
-        "output": "Dein sicherer Hafen",
-        "context": "advice"
-      },
-      {
-        "briefing": "Du willst nooch nicht in die Winterphase gehen und weiterhin dein Trianing im Freien gestalten?\nDann geh auf NUmmer sicher und bleib für alle sichtbar\nhttps://www.decathlon.de/alle-sportarten-a-z/fahrrad-welt/sichtbarkeit",
-        "output": "Sicher draußen weitersporteln",
-        "context": "advice"
-      },
-      {
-        "briefing": "Bei jedem Wetter gut geschützt\nDamit du in allen Umständen deine Top-Zeit läufst und das natrüliche Farbenmeer genießen kannst\nhttps://www.decathlon.de/alle-sportarten-a-z/laufen/laufjacken-laufwesten ",
-        "output": "Im Herbst das Tempo anziehen",
-        "context": "advice"
+        "output": "Dein sicherer Hafen"
       }
     ],
     "rules": [
@@ -130,10 +196,8 @@
       "Wenn du auch das Meer erobern willst und das Wasser beherrschen willst, starte jetzt durch!",
       "Segeln ist ist dir doch etwas suspekt?",
       "Es gibt noch andere Wassersportarten, die bei Wind und Wetter perfekt funktionieren: Entdecke neue Sportarten wie Windsurfen;  Wetter nutzen um Spaß zu haben",
-      "Egal, ob Läufer, Fitnessstudio-Enthusiast, Boxer oder einfach nur auf der Suche nach einer Lösung für den sitzenden Lebensstil, unsere Produkte wurden neu erfunden, um deine Bedürfnisse zu erfüllen!",
-      "Und auch die Radsportler sollen nicht zu kurz kommen und auch über den Winter ihr Training durchziehen können und fit bleiben",
-      "Die Natur wechselt die Farbe von Grün zu einem wunderschönen rot-orange",
-      "Perfekt, um sie bei deinem Sport zu genießen und die letzten warmen Sonnenstrahlen aufzusaugen und mit einem guten Gefühl in die kühle Jahreszeit zu starten",
+      "Damit meisterst du jede Welle bei jedem Wetter und lässt dich nciht unterkriegen",
+      "https://www.decathlon.de/alle-sportarten-a-z/wassersport-welt/offshore-pro-series",
       "Use friendly and inviting tone",
       "Maintain brand voice",
       "Be concise and direct",
@@ -142,25 +206,13 @@
       "Avoid technical jargon"
     ]
   },
-  "advice_content copy": {
+  {
     "component_type": "advice",
     "element_type": "Content Copy",
     "char_limit": 160,
     "examples": [
       {
-        "briefing": "",
-        "output": "Ob du ein großes Abenteuer wagst oder lieber kleinere Herausforderungen suchst: Bei uns findest du für jede Etappe das richtige Equipment.",
-        "context": "advice"
-      },
-      {
-        "briefing": "",
-        "output": "Das Wetter hält dich nicht auf und du willst weiterhin an der frischen Luft Gas geben? Aber sicher doch! Unser Sichtbarkeits-Sortiment sorgt für Safety first.",
-        "context": "advice"
-      },
-      {
-        "briefing": "",
-        "output": "Selbst die schönste herbstliche Joggingrunde macht wenig Spaß, wenn‘s an der Ausrüstung hapert. Wir statten dich aus, damit du die Natur voll genießen kannst.",
-        "context": "advice"
+        "output": "Ob du ein großes Abenteuer wagst oder lieber kleinere Herausforderungen suchst: Bei uns findest du für jede Etappe das richtige Equipment."
       }
     ],
     "rules": [
@@ -172,25 +224,13 @@
       "Avoid technical jargon"
     ]
   },
-  "advice_cta": {
+  {
     "component_type": "advice",
     "element_type": "CTA",
     "char_limit": 30,
     "examples": [
       {
-        "briefing": "",
-        "output": "Zum Offshore-Euipment",
-        "context": "advice"
-      },
-      {
-        "briefing": "",
-        "output": "Zum Sicherheits-Equipment",
-        "context": "advice"
-      },
-      {
-        "briefing": "",
-        "output": "Zu den Laufjacken- und Westen",
-        "context": "advice"
+        "output": "Zum Offshore-Euipment"
       }
     ],
     "rules": [
@@ -202,37 +242,21 @@
       "Avoid technical jargon"
     ]
   },
-  "product_product title": {
-    "component_type": "product",
-    "element_type": "Product Title",
-    "char_limit": 40,
+  {
+    "component_type": "advice",
+    "element_type": "Content Title",
+    "char_limit": 30,
     "examples": [
       {
-        "briefing": "Fitness auch ohne Studio: Zuhause fit bleiben:\nProdukt 1: https://www.decathlon.de/p/rack-2-seconds-klappsystem-ultrakompakt-120-kg/_/R-p-351775?mc=8861148\nProdukt 2: https://www.decathlon.de/p/boxsack-erwachsene-air-gel/_/R-p-341562?mc=8751099&c=schwarz_beige",
-        "output": "It's coming home",
-        "context": "product"
-      },
-      {
-        "briefing": "Gut geschützt zu kleinen Preisen\nProdukt 1: https://www.decathlon.de/p/laufshirt-langarm-herren-mit-reissverschluss-run-500-warm-blau/_/R-p-337040?mc=8677725&c=schwarz\"\nProdukt 2: https://www.decathlon.de/p/laufjacke-damen-atmungsaktiv-run-100-dry-schwarz/_/R-p-334259?mc=8650499&c=schwarz\"",
-        "output": "Atmungsaktiv durch die Übergangszeit",
-        "context": "product"
-      },
-      {
-        "briefing": "Immer sicher im Wasser unterwegs\nProdukt 1: https://www.decathlon.de/p/helm-surfen-schwarz/_/R-p-327505?mc=8797827&c=orange\nProdukt 2: https://www.decathlon.de/p/auftriebsweste-prallschutzweste-damen-50-n-wingfoil-wakeboard-100/_/R-p-329115?mc=8605535&c=schwarz",
-        "output": "Sicher ins Wasser",
-        "context": "product"
+        "output": "Sicher draußen weitersporteln"
       }
     ],
     "rules": [
       "Egal, ob Läufer, Fitnessstudio-Enthusiast, Boxer oder einfach nur auf der Suche nach einer Lösung für den sitzenden Lebensstil, unsere Produkte wurden neu erfunden, um deine Bedürfnisse zu erfüllen!",
       "Und auch die Radsportler sollen nicht zu kurz kommen und auch über den Winter ihr Training durchziehen können und fit bleiben",
-      "Das Wetter wird wieder kühler, die kurze Laufbekleidung kommt in den Schrank.",
-      "Damit du aber nicht auf deine Läufe verzichten musst, statte dich jetzt aus, und falle nicht ins Herbstloch",
-      "Wie passend, dass genau jetzt auch die Running Deals anstehen und du bis zu XX % sparen kannst",
-      "Das größte Segelevent (Vendée Globe) steht wieder an, das heißt voller Fokus auf die besten Segler und Seglerinnen der Welt.",
-      "Wenn du auch das Meer erobern willst und das Wasser beherrschen willst, starte jetzt durch!",
-      "Segeln ist ist dir doch etwas suspekt?",
-      "Es gibt noch andere Wassersportarten, die bei Wind und Wetter perfekt funktionieren: Entdecke neue Sportarten wie Windsurfen;  Wetter nutzen um Spaß zu haben",
+      "Du willst nooch nicht in die Winterphase gehen und weiterhin dein Trianing im Freien gestalten?",
+      "Dann geh auf NUmmer sicher und bleib für alle sichtbar",
+      "https://www.decathlon.de/alle-sportarten-a-z/fahrrad-welt/sichtbarkeit",
       "Use friendly and inviting tone",
       "Maintain brand voice",
       "Be concise and direct",
@@ -241,25 +265,131 @@
       "Avoid technical jargon"
     ]
   },
-  "product_product subtitle": {
+  {
+    "component_type": "advice",
+    "element_type": "Content Copy",
+    "char_limit": 160,
+    "examples": [
+      {
+        "output": "Das Wetter hält dich nicht auf und du willst weiterhin an der frischen Luft Gas geben? Aber sicher doch! Unser Sichtbarkeits-Sortiment sorgt für Safety first."
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "advice",
+    "element_type": "CTA",
+    "char_limit": 30,
+    "examples": [
+      {
+        "output": "Zum Sicherheits-Equipment"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "advice",
+    "element_type": "Content Title",
+    "char_limit": 30,
+    "examples": [
+      {
+        "output": "Im Herbst das Tempo anziehen"
+      }
+    ],
+    "rules": [
+      "Die Natur wechselt die Farbe von Grün zu einem wunderschönen rot-orange",
+      "Perfekt, um sie bei deinem Sport zu genießen und die letzten warmen Sonnenstrahlen aufzusaugen und mit einem guten Gefühl in die kühle Jahreszeit zu starten",
+      "Bei jedem Wetter gut geschützt",
+      "Damit du in allen Umständen deine Top-Zeit läufst und das natrüliche Farbenmeer genießen kannst",
+      "https://www.decathlon.de/alle-sportarten-a-z/laufen/laufjacken-laufwesten",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "advice",
+    "element_type": "Content Copy",
+    "char_limit": 160,
+    "examples": [
+      {
+        "output": "Selbst die schönste herbstliche Joggingrunde macht wenig Spaß, wenn‘s an der Ausrüstung hapert. Wir statten dich aus, damit du die Natur voll genießen kannst."
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "advice",
+    "element_type": "CTA",
+    "char_limit": 30,
+    "examples": [
+      {
+        "output": "Zu den Laufjacken- und Westen"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "product",
+    "element_type": "Product Title",
+    "char_limit": 40,
+    "examples": [
+      {
+        "output": "It's coming home"
+      }
+    ],
+    "rules": [
+      "Egal, ob Läufer, Fitnessstudio-Enthusiast, Boxer oder einfach nur auf der Suche nach einer Lösung für den sitzenden Lebensstil, unsere Produkte wurden neu erfunden, um deine Bedürfnisse zu erfüllen!",
+      "Und auch die Radsportler sollen nicht zu kurz kommen und auch über den Winter ihr Training durchziehen können und fit bleiben",
+      "Fitness auch ohne Studio: Zuhause fit bleiben:",
+      "Produkt 1: https://www.decathlon.de/p/rack-2-seconds-klappsystem-ultrakompakt-120-kg/_/R-p-351775?mc=8861148",
+      "Produkt 2: https://www.decathlon.de/p/boxsack-erwachsene-air-gel/_/R-p-341562?mc=8751099&c=schwarz_beige",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
     "component_type": "product",
     "element_type": "Product Subtitle",
     "char_limit": 65,
     "examples": [
       {
-        "briefing": "",
-        "output": "Lass den Sport bei dir einziehen und bleib über den Winter fit.",
-        "context": "product"
-      },
-      {
-        "briefing": "",
-        "output": "Dein Schutz vor Kälte und Wind zu kleinen Preisen.",
-        "context": "product"
-      },
-      {
-        "briefing": "",
-        "output": "Schützt Kopf & Oberkörper vor Stößen beim Boarden & Surfen.",
-        "context": "product"
+        "output": "Lass den Sport bei dir einziehen und bleib über den Winter fit."
       }
     ],
     "rules": [
@@ -271,32 +401,104 @@
       "Avoid technical jargon"
     ]
   },
-  "banner_banner headline": {
+  {
+    "component_type": "product",
+    "element_type": "Product Title",
+    "char_limit": 40,
+    "examples": [
+      {
+        "output": "Atmungsaktiv durch die Übergangszeit"
+      }
+    ],
+    "rules": [
+      "Das Wetter wird wieder kühler, die kurze Laufbekleidung kommt in den Schrank.",
+      "Damit du aber nicht auf deine Läufe verzichten musst, statte dich jetzt aus, und falle nicht ins Herbstloch",
+      "Wie passend, dass genau jetzt auch die Running Deals anstehen und du bis zu XX % sparen kannst",
+      "Gut geschützt zu kleinen Preisen",
+      "Produkt 1: https://www.decathlon.de/p/laufshirt-langarm-herren-mit-reissverschluss-run-500-warm-blau/_/R-p-337040?mc=8677725&c=schwarz\"",
+      "Produkt 2: https://www.decathlon.de/p/laufjacke-damen-atmungsaktiv-run-100-dry-schwarz/_/R-p-334259?mc=8650499&c=schwarz\"",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "product",
+    "element_type": "Product Subtitle",
+    "char_limit": 65,
+    "examples": [
+      {
+        "output": "Dein Schutz vor Kälte und Wind zu kleinen Preisen."
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "product",
+    "element_type": "Product Title",
+    "char_limit": 40,
+    "examples": [
+      {
+        "output": "Sicher ins Wasser"
+      }
+    ],
+    "rules": [
+      "Das größte Segelevent (Vendée Globe) steht wieder an, das heißt voller Fokus auf die besten Segler und Seglerinnen der Welt.",
+      "Wenn du auch das Meer erobern willst und das Wasser beherrschen willst, starte jetzt durch!",
+      "Segeln ist ist dir doch etwas suspekt?",
+      "Es gibt noch andere Wassersportarten, die bei Wind und Wetter perfekt funktionieren: Entdecke neue Sportarten wie Windsurfen;  Wetter nutzen um Spaß zu haben",
+      "Immer sicher im Wasser unterwegs",
+      "Produkt 1: https://www.decathlon.de/p/helm-surfen-schwarz/_/R-p-327505?mc=8797827&c=orange",
+      "Produkt 2: https://www.decathlon.de/p/auftriebsweste-prallschutzweste-damen-50-n-wingfoil-wakeboard-100/_/R-p-329115?mc=8605535&c=schwarz",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "product",
+    "element_type": "Product Subtitle",
+    "char_limit": 65,
+    "examples": [
+      {
+        "output": "Schützt Kopf & Oberkörper vor Stößen beim Boarden & Surfen."
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
     "component_type": "banner",
     "element_type": "Banner Headline",
     "char_limit": 26,
     "examples": [
       {
-        "briefing": "Jagd Bekleidung für die Drückjagd - oder warme Sachen für alle, die es flashy mögen\nhttps://www.decathlon.de/alle-sportarten-a-z/jagd/jagdbekleidung-winter ",
-        "output": "Auffällig warm",
-        "context": "banner"
-      },
-      {
-        "briefing": "Damit du keine kalten Füße bekommst \nhttps://www.decathlon.de/alle-sportarten-a-z/wandern-trekking/winterschuhe-winterstiefel ",
-        "output": "Nie wieder kalte Füße",
-        "context": "banner"
-      },
-      {
-        "briefing": "Repair & Care\nhttps://www.decathlon.de/Pflege-und-Reparatur_lp-8X7NBW",
-        "output": "Repariere, was du liebst",
-        "context": "banner"
+        "output": "Auffällig warm"
       }
     ],
     "rules": [
       "Unsere Jacken für die Übergangszeit, warm und wasserdicht. (Regenjacken und Fleccejacken)",
-      "Das Wetter wird immer nasser und die Temperaturen fallen",
-      "Das heißt aber nicht, dass deine Stimmung auch in den Keller gehen muss",
-      "Mach Sport und bleibe weiter aktiv und verhindere, dass du in den Winter Blues fällst",
+      "Jagd Bekleidung für die Drückjagd - oder warme Sachen für alle, die es flashy mögen",
+      "https://www.decathlon.de/alle-sportarten-a-z/jagd/jagdbekleidung-winter",
       "Use friendly and inviting tone",
       "Maintain brand voice",
       "Be concise and direct",
@@ -305,25 +507,13 @@
       "Avoid technical jargon"
     ]
   },
-  "banner_banner copy": {
+  {
     "component_type": "banner",
     "element_type": "Banner Copy",
     "char_limit": 60,
     "examples": [
       {
-        "briefing": "",
-        "output": "Für die Drückjagd oder den großen Auftritt im Alltag",
-        "context": "banner"
-      },
-      {
-        "briefing": "",
-        "output": "Warm, atmungsaktiv & wasserdicht: deine Winterwanderschuhe",
-        "context": "banner"
-      },
-      {
-        "briefing": "",
-        "output": "Gemeinsam bringen wir defektes Equipment wieder in Schuss",
-        "context": "banner"
+        "output": "Für die Drückjagd oder den großen Auftritt im Alltag"
       }
     ],
     "rules": [
@@ -335,25 +525,128 @@
       "Avoid technical jargon"
     ]
   },
-  "banner_cta": {
+  {
     "component_type": "banner",
     "element_type": "CTA",
     "char_limit": 30,
     "examples": [
       {
-        "briefing": "",
-        "output": "Zur Winter-Jagdkleidung",
-        "context": "banner"
-      },
+        "output": "Zur Winter-Jagdkleidung"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "banner",
+    "element_type": "Banner Headline",
+    "char_limit": 26,
+    "examples": [
       {
-        "briefing": "",
-        "output": "Zu den Winterschuhen",
-        "context": "banner"
-      },
+        "output": "Nie wieder kalte Füße"
+      }
+    ],
+    "rules": [
+      "Das Wetter wird immer nasser und die Temperaturen fallen",
+      "Das heißt aber nicht, dass deine Stimmung auch in den Keller gehen muss",
+      "Mach Sport und bleibe weiter aktiv und verhindere, dass du in den Winter Blues fällst",
+      "Damit du keine kalten Füße bekommst",
+      "https://www.decathlon.de/alle-sportarten-a-z/wandern-trekking/winterschuhe-winterstiefel",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "banner",
+    "element_type": "Banner Copy",
+    "char_limit": 60,
+    "examples": [
       {
-        "briefing": "",
-        "output": "Zu Pflege & Reparatur",
-        "context": "banner"
+        "output": "Warm, atmungsaktiv & wasserdicht: deine Winterwanderschuhe"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "banner",
+    "element_type": "CTA",
+    "char_limit": 30,
+    "examples": [
+      {
+        "output": "Zu den Winterschuhen"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "banner",
+    "element_type": "Banner Headline",
+    "char_limit": 26,
+    "examples": [
+      {
+        "output": "Repariere, was du liebst"
+      }
+    ],
+    "rules": [
+      "Repair & Care",
+      "https://www.decathlon.de/Pflege-und-Reparatur_lp-8X7NBW",
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "banner",
+    "element_type": "Banner Copy",
+    "char_limit": 60,
+    "examples": [
+      {
+        "output": "Gemeinsam bringen wir defektes Equipment wieder in Schuss"
+      }
+    ],
+    "rules": [
+      "Use friendly and inviting tone",
+      "Maintain brand voice",
+      "Be concise and direct",
+      "Focus on customer benefits",
+      "Use active voice",
+      "Avoid technical jargon"
+    ]
+  },
+  {
+    "component_type": "banner",
+    "element_type": "CTA",
+    "char_limit": 30,
+    "examples": [
+      {
+        "output": "Zu Pflege & Reparatur"
       }
     ],
     "rules": [
@@ -365,4 +658,4 @@
       "Avoid technical jargon"
     ]
   }
-}
+]
