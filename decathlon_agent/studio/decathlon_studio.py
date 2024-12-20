@@ -19,6 +19,17 @@ load_dotenv()
 # Schema definitions
 @dataclass
 class CopyComponent:
+    """
+    Represents a content component for copy generation.
+
+    Attributes:
+        component_type (str): Type of the component (e.g., 'headline basic')
+        element_type (str): Specific element within the component type
+        char_limit (int): Maximum number of characters allowed
+        token_limit (int): Maximum number of tokens allowed
+        audience (str): Target audience for the content
+        max_attempts (int): Maximum number of generation attempts allowed
+    """
     component_type: str
     element_type: str
     char_limit: int
@@ -48,14 +59,92 @@ def generate_with_retry(llm, prompt: str):
     """Generate content with retry logic."""
     return llm.invoke(prompt)
 
+def construct_prompt(component: Dict[str, Any], kb_info: Dict[str, Any], feedback_text: str) -> str:
+    """Constructs the prompt for the LLM based on component and knowledge base information."""
+    examples_text = ""
+    if kb_info:
+        examples_text = "\nBEISPIELE ZUR ORIENTIERUNG:\n"
+        for ex in kb_info.get("examples", [])[:2]:
+            examples_text += f"Beispiel Output ({len(ex.get('expected_output', ''))} Zeichen): {ex.get('expected_output', '')}\n"
+
+    char_limit = kb_info.get('char_limit', component["char_limit"])
+
+    # Determine length guidance based on char_limit
+    length_guidance = """
+LÄNGENHINWEISE:
+- Nutze kurze, prägnante Wörter
+- Vermeide Füllwörter und lange Komposita
+- Jedes Wort muss einen Mehrwert bringen
+- Nutze Ausrufezeichen sparsam
+""" if char_limit <= 35 else """
+LÄNGENHINWEISE:
+- Halte die Sätze kurz und prägnant
+- Vermeide Füllwörter und Wiederholungen
+- Jeder Satz sollte einen klaren Mehrwert haben
+"""
+
+    prompt = f"""Du bist ein erfahrener Decathlon CRM Copywriter, spezialisiert auf die Erstellung von E-Mail-Inhalten.
+
+ROLLE UND AUFGABE:
+- Entwickle inspirierende, energiegeladene Kommunikation für sportbegeisterte Menschen
+- Schaffe eine persönliche, einladende Atmosphäre
+- Stelle den Markenkern "Sport für alle zugänglich und erfreulich zu machen" in den Mittelpunkt
+- Fördere eine positive, kundenorientierte Beziehung
+
+MARKENIDENTITÄT UND TONALITÄT:
+- Freundlich und Einladend: Persönliche, einladende Note in jeder Nachricht
+- Begeistert und Positiv: Vermittle die Freude am Sport und Outdoor-Aktivitäten
+- Kundenorientiert und Unterstützend: Biete inspirierende Inhalte und klare Orientierung
+- Einfach und Direkt: Vermeide Fachjargon, halte die Sprache verständlich
+- Spielerisch und Energetisch: Nutze leichten Humor und Dynamik wo angebracht
+
+{length_guidance}
+
+BEISPIELE ZUR ORIENTIERUNG:
+{examples_text}
+
+WICHTIGE REGELN:
+- Der Content MUSS spezifisch auf {component["audience"]} ausgerichtet sein
+- STRENGE Längenbegrenzung:
+  - Maximal {char_limit} Zeichen (inkl. Leerzeichen und Satzzeichen)
+- Keine direkte Kundenanrede
+- Keine CTAs oder Verlinkungen im Einführungstext
+- Keine Anführungszeichen verwenden
+
+TECHNISCHE ANFORDERUNGEN:
+- Zielgruppe: {component["audience"]}
+- Komponententyp: {component["component_type"]}
+- Elementtyp: {component["element_type"]}
+
+FORMATIERUNG:
+- Gib NUR den reinen Text zurück, ohne Präfixe wie 'Text:' oder 'Content:'
+- Keine zusätzliche Formatierung
+- Text muss in deutscher Sprache sein
+
+{feedback_text}
+
+WICHTIG: Der Text MUSS kürzer als {char_limit} Zeichen sein. Zähle jeden Buchstaben, jedes Leerzeichen und jedes Satzzeichen."""
+    return prompt
+
 def generate_content(state: State) -> State:
-    """Generate copy using LLM."""
+    """
+    Generates copy content using LLM based on the component specifications.
+
+    Args:
+        state (State): Current workflow state
+
+    Returns:
+        State: Updated state with generated content and attempt information
+
+    Note:
+        Uses retry logic for API calls and maintains generation history
+    """
     knowledge_base = load_knowledge_base("template_kb.json")
     try:
         llm = ChatOpenAI(
             model="gpt-4o-mini",
-            temperature=0.4,
-            max_retries=3,
+            temperature=0.2,
+            max_retries=2,
             request_timeout=30
         )
 
@@ -64,32 +153,17 @@ def generate_content(state: State) -> State:
 
         # Get relevant information from the knowledge base using dictionary key access
         kb_info = knowledge_base.get(component["component_type"], {}).get(component["element_type"], {})
-        examples_text = ""
-        if kb_info:
-            examples_text = "\nBEISPIELE ZUR ORIENTIERUNG:\n"
-            for ex in kb_info.get("examples", [])[:2]:
-                examples_text += f"Beispiel Output ({len(ex.get('expected_output', ''))} Zeichen): {ex.get('expected_output', '')}\n"
 
         # Add feedback to the prompt if the previous attempt failed validation
         feedback_text = ""
-        if state.get("status") == "validation_failed":
-            feedback_text = "\n\nHINWEIS: Der vorherige Versuch ist gescheitert, weil die Zeichen- oder Token-Limits überschritten wurden. Bitte halte dich UNBEDINGT an die vorgegebene Länge."
+        if state.get("status") == "validation_failed" and state.get("validation_results"):
+            validation_results = state["validation_results"]
+            if not validation_results["within_char_limit"]:
+                feedback_text += f"\n\nHINWEIS: Der vorherige Versuch hat das Zeichenlimit um {validation_results['char_count'] - component['char_limit']} Zeichen überschritten. Bitte kürze den Text entsprechend."
+            # We can add more feedback conditions here for other validation failures (e.g., token limit)
 
-        prompt = f"""Du bist ein Decathlon CRM Copywriter. 
-Erstelle motivierenden Content für {component["audience"]}-Enthusiasten.
-
-WICHTIGE REGELN:
-- Keine direkte Anrede
-- Keine CTAs oder Verlinkungen
-- Exakte Zeichenlänge: {kb_info.get('char_limit', component["char_limit"])} Zeichen
-- Token Limit: {kb_info.get('token_limit', component["token_limit"])} Tokens
-- Der Content muss spezifisch auf {component["audience"]} ausgerichtet sein
-
-{examples_text}
-
-{feedback_text}
-
-Erstelle den Text in deutscher Sprache."""
+        # Construct the prompt using the separate function
+        prompt = construct_prompt(component, kb_info, feedback_text)
 
         response = generate_with_retry(llm, prompt)
 
@@ -126,7 +200,19 @@ Erstelle den Text in deutscher Sprache."""
         }
 
 def validate_content(state: State) -> State:
-    """Validate the generated content."""
+    """
+    Validates the generated content against specified constraints.
+
+    Args:
+        state (State): Current workflow state containing generated content
+
+    Returns:
+        State: Updated state with validation results
+
+    Validates:
+        - Character count against limit
+        - Content emptiness
+    """
     try:
         component = state["components"][0]
         content = state["generated_content"].strip()
@@ -162,7 +248,20 @@ def validate_content(state: State) -> State:
         }
 
 def should_continue(state: State) -> str:
-    """Determine if generation should continue."""
+    """
+    Determines if the generation process should continue based on current state.
+
+    Args:
+        state (State): Current workflow state
+
+    Returns:
+        str: Next action to take ('generate', END)
+
+    Decision logic:
+        - Ends if validation is successful
+        - Continues generation if under max attempts
+        - Ends if max attempts reached
+    """
     if state["status"] == "completed":
         return END  # End if validation is successful
     if state["status"] == "validation_failed":
@@ -172,24 +271,26 @@ def should_continue(state: State) -> str:
             state["status"] = "max_attempts_reached"
             return END  # End if max attempts reached and still failing validation
     return END  # Default to end if status is anything else
-# Create the workflow graph
+
+# Workflow Graph Setup
+# Create a directed graph for the content generation workflow
 workflow = StateGraph(State)
 
-# Add nodes
-workflow.add_node("generate", generate_content)
-workflow.add_node("validate", validate_content)
+# Define the main processing nodes
+workflow.add_node("generate", generate_content)  # Content generation node
+workflow.add_node("validate", validate_content)  # Content validation node
 
-# Add edges
-workflow.add_edge(START, "generate")
-workflow.add_edge("generate", "validate")
+# Define the workflow edges
+workflow.add_edge(START, "generate")  # Start with generation
+workflow.add_edge("generate", "validate")  # Validate after generation
 
-# Add conditional edges
+# Add conditional logic for workflow continuation
 workflow.add_conditional_edges(
     "validate",
     should_continue,
     {
-        END: END,
-        "generate": "generate"
+        END: END,  # End workflow if complete or max attempts reached
+        "generate": "generate"  # Retry generation if needed
     }
 )
 
@@ -200,4 +301,4 @@ knowledge_base = load_knowledge_base("template_kb.json")
 graph = workflow.compile()
 
 # Example input for testing in LangGraph Studio
-[{"component_type": "headline basic", "element_type": "Introduction Copy", "char_limit": 400, "token_limit": 200, "audience": "Schwimmen", "max_attempts": 3}]
+[{"component_type": "headline basic", "element_type": "Introduction Copy", "char_limit": 400, "token_limit": 200, "audience": "Schwimmen", "max_attempts": 2}]
