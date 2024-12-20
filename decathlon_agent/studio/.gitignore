@@ -1,29 +1,23 @@
-# Ignore everything
+# Ignore everything in this directory
 *
 
-# But not these files...
+# But not these files
 !.gitignore
 !decathlon_studio.py
 !DOCUMENTATION.md
 !README.md
 
-# Even if they are in subdirectories
-!*/
+# Ignore all .DS_Store files
+.DS_Store
 
-# Ignore Python cache files even if they match above rules
+# Ignore these even if they're in allowed paths
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
-
-# Ignore environment files
 .env
-.venv
-env/
-venv/
-
-# Ignore exports directory
 exports/
-
-# Ignore IDE files
-.idea/
-.vscode/ 
+knowledge_base/
+langgraph.json
+plan1_3.md
+requirements.txt
+template_kb.json
+decathlon_copywriter_agent_studio.py
