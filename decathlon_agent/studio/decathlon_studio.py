@@ -1,4 +1,3 @@
-
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -10,12 +9,13 @@ from datetime import datetime
 import json
 from dataclasses import dataclass
 from langchain.schema import SystemMessage
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 # Schema definitions
@@ -25,12 +25,12 @@ class CopyComponent:
     Represents a content component for copy generation.
 
     Attributes:
-        component_type (str): Type of the component (e.g., 'headline basic')
-        element_type (str): Specific element within the component type
-        char_limit (int): Maximum number of characters allowed
-        token_limit (int): Maximum number of tokens allowed
-        audience (str): Target audience for the content
-        max_attempts (int): Maximum number of generation attempts allowed
+        component_type (str): Type of the component (e.g., 'headline basic').
+        element_type (str): Specific element within the component type (e.g., 'headline_text').
+        char_limit (int): Maximum number of characters allowed for the content.
+        token_limit (int): Maximum number of tokens allowed for the content.
+        audience (str): Target audience for the content.
+        max_attempts (int): Maximum number of generation attempts allowed for this component. Defaults to 3.
     """
     component_type: str
     element_type: str
@@ -40,7 +40,20 @@ class CopyComponent:
     max_attempts: int = 3
 
 class State(TypedDict):
-    components: List[CopyComponent]  # Now consistently using CopyComponent
+    """
+    Represents the state of the copy generation workflow.
+
+    Attributes:
+        components (List[CopyComponent]): A list of copy components to be generated.
+        generated_content (List[Dict[str, Any]]): A list to store the generated content for each component.
+        validation_results (List[Dict[str, Any]]): A list to store the validation results for each generated content.
+        errors (List[str]): A list to store any error messages encountered during generation or validation.
+        attempt_count (int): The current attempt count for generating content.
+        status (str): The current status of the workflow (e.g., 'generating', 'validation_passed').
+        generation_history (List[Dict[str, Any]]): A list to store the history of generated content for each attempt.
+        output (List[Dict[str, Any]]): The final formatted output of the generated content.
+    """
+    components: List[CopyComponent]
     generated_content: List[Dict[str, Any]]
     validation_results: List[Dict[str, Any]]
     errors: List[str]
@@ -49,9 +62,16 @@ class State(TypedDict):
     generation_history: List[Dict[str, Any]]
     output: List[Dict[str, Any]]
 
-# Knowledge base loading function (remains synchronous as it's a one-time load)
+# Knowledge base loading function
 def load_knowledge_base(filepath: str) -> dict:
-    """Loads the knowledge base from a JSON file."""
+    """Loads the knowledge base from a JSON file.
+
+    Args:
+        filepath (str): The path to the JSON file containing the knowledge base.
+
+    Returns:
+        dict: The loaded knowledge base as a dictionary.
+    """
     with open(filepath, 'r') as f:
         return json.load(f)
 
@@ -59,11 +79,28 @@ def load_knowledge_base(filepath: str) -> dict:
 @retry(wait=wait_exponential(multiplier=1, min=4, max=10),
        stop=stop_after_attempt(3))
 async def generate_with_retry(llm, prompt: str):
-    """Generate content with retry logic (async)."""
+    """Generates content using the LLM with retry logic.
+
+    Args:
+        llm: The language model instance.
+        prompt (str): The prompt to send to the language model.
+
+    Returns:
+        langchain_core.messages.AIMessage: The response from the language model.
+    """
     return await llm.ainvoke(prompt)
 
 def construct_prompt(component: CopyComponent, kb_info: Dict[str, Any], feedback_text: str) -> str:
-    """Constructs the prompt for the LLM based on component and knowledge base information."""
+    """Constructs the prompt for the LLM based on component specifications, knowledge base, and feedback.
+
+    Args:
+        component (CopyComponent): The copy component for which to generate content.
+        kb_info (Dict[str, Any]): Information from the knowledge base relevant to the component.
+        feedback_text (str): Feedback from previous attempts, if any.
+
+    Returns:
+        str: The constructed prompt for the LLM.
+    """
     examples_text = ""
     if kb_info:
         examples_text = "\nBEISPIELE ZUR ORIENTIERUNG:\n"
@@ -141,23 +178,31 @@ WICHTIG: Der Text MUSS kürzer als {char_limit} Zeichen sein. Zähle jeden Buchs
     return prompt
 
 def generate_feedback(validation_results: Dict[str, Any], component: CopyComponent) -> List[str]:
-    """Generate detailed feedback messages based on validation results."""
+    """Generates detailed feedback messages based on validation results.
+
+    Args:
+        validation_results (Dict[str, Any]): The validation results for the generated content.
+        component (CopyComponent): The copy component being validated.
+
+    Returns:
+        List[str]: A list of feedback messages.
+    """
     feedback_messages = []
 
-    # Character limit validation - access char_limit from component
+    # Character limit validation
     if not validation_results.get("within_char_limit", True):
         char_count = validation_results.get("char_count", 0)
-        char_limit = component.char_limit  # Get char_limit from component
+        char_limit = component.char_limit
         char_diff = char_count - char_limit
         feedback_messages.append(
             f"Zeichenlimit überschritten: {char_count}/{char_limit} "
             f"({char_diff} Zeichen zu lang)"
         )
 
-    # Token limit validation - access token_limit from component
+    # Token limit validation
     if not validation_results.get("within_token_limit", True):
         token_count = validation_results.get("token_count", 0)
-        token_limit = component.token_limit  # Get token_limit from component
+        token_limit = component.token_limit
         token_diff = token_count - token_limit
         feedback_messages.append(
             f"Token-Limit überschritten: {token_count}/{token_limit} "
@@ -175,7 +220,14 @@ def generate_feedback(validation_results: Dict[str, Any], component: CopyCompone
     return feedback_messages
 
 def clean_content(content: str) -> str:
-    """Clean the content by removing unwanted prefixes and formatting."""
+    """Cleans the generated content by removing unwanted prefixes and formatting.
+
+    Args:
+        content (str): The raw generated content.
+
+    Returns:
+        str: The cleaned content.
+    """
     # List of common prefixes to remove
     prefixes = ["text:", "content:", "output:", "generated text:"]
 
@@ -194,7 +246,14 @@ def clean_content(content: str) -> str:
     return content
 
 async def generate_content(state: State) -> State:
-    """Generates copy content using LLM based on the component specifications (async)."""
+    """Generates copy content using LLM based on the component specifications.
+
+    Args:
+        state (State): The current state of the workflow.
+
+    Returns:
+        State: The updated state with generated content.
+    """
     # Initialize state fields if they don't exist
     state["generated_content"] = state.get("generated_content", [])
     state["validation_results"] = state.get("validation_results", [])
@@ -203,7 +262,7 @@ async def generate_content(state: State) -> State:
     state["status"] = "generating"
     state["generation_history"] = state.get("generation_history", [])
 
-    # Convert dictionaries to CopyComponent objects
+    # Ensure components are CopyComponent objects
     if not all(isinstance(comp, CopyComponent) for comp in state["components"]):
         state["components"] = [CopyComponent(**comp) for comp in state["components"]]
 
@@ -221,7 +280,7 @@ async def generate_content(state: State) -> State:
 
             kb_info = knowledge_base.get(component.component_type, {}).get(component.element_type, {})
 
-            # Enhanced feedback logic
+            # Enhanced feedback logic: Provide feedback from previous validation attempts
             feedback_text = ""
             if state.get("status") == "validation_failed" and state.get("errors"):
                 # Find feedback relevant to the current component
@@ -244,6 +303,7 @@ async def generate_content(state: State) -> State:
             })
 
         except Exception as e:
+            logger.error(f"Generation error for {component.element_type}: {str(e)}")
             state["errors"].append(f"Generation error for {component.element_type}: {str(e)}")
             state["status"] = "error"
             return state # Exit if one component fails
@@ -253,7 +313,14 @@ async def generate_content(state: State) -> State:
     return state
 
 def validate_content(state: State) -> State:
-    """Validates the generated content against specified criteria."""
+    """Validates the generated content against specified criteria.
+
+    Args:
+        state (State): The current state of the workflow, including generated content.
+
+    Returns:
+        State: The updated state with validation results.
+    """
     all_validation_results = []
     all_errors = []
 
@@ -277,7 +344,7 @@ def validate_content(state: State) -> State:
             ),
         }
 
-        # Update the cleaned content
+        # Update the cleaned content in the state
         state["generated_content"][idx]["content"] = content
 
         # Generate feedback for this component
@@ -300,7 +367,14 @@ def validate_content(state: State) -> State:
     return state
 
 def should_continue(state: State) -> str:
-    """Determines if the generation process should continue."""
+    """Determines if the generation process should continue based on the current state.
+
+    Args:
+        state (State): The current state of the workflow.
+
+    Returns:
+        str: The name of the next node to execute or END if the workflow should terminate.
+    """
     if state["status"] == "validation_passed":
         return "format_output"
 
@@ -315,39 +389,74 @@ def should_continue(state: State) -> str:
     return END
 
 def format_output(state: State) -> State:
-    """Formats the final output as a clean JSON structure."""
-    logger.info(f"Entering format_output with state: {state}")
+    """Formats the final output as a clean JSON structure and saves it to a file.
+
+    Args:
+        state (State): The final state of the workflow, including generated content and validation results.
+
+    Returns:
+        State: The updated state with the formatted output.
+    """
     output = []
 
-    for idx, component in enumerate(state["components"]):
-        logger.info(f"Processing component at index {idx}: {component}")
+    for component in state["components"]:
         result = {
             "component_type": component.component_type,
             "element_type": component.element_type,
             "audience": component.audience
         }
 
-        # Check if we have validation results for this component
-        if idx < len(state["validation_results"]):
-            validation = state["validation_results"][idx]
-
-            if validation.get("within_char_limit", True) and not validation.get("is_empty", False):
-                # If validation passed, include the content
-                result["status"] = "success"
-                result["content"] = state["generated_content"][idx]["content"]
-            else:
-                # If validation failed, include the error messages
-                result["status"] = "failed"
-                errors = [msg for msg in state["errors"] if msg.startswith(f"{component.element_type}:")]
-                result["errors"] = errors if errors else ["Unknown validation error"]
+        # Get validation results for this component
+        validation_results = state["validation_results"]
+        if isinstance(validation_results, list):
+            validation = next((v for v in validation_results
+                             if v.get("element_type") == result["element_type"]), {})
         else:
-            # Component wasn't processed
-            result["status"] = "error"
-            result["errors"] = ["Component processing failed"]
+            validation = validation_results
+
+        if validation.get("within_char_limit", True) and not validation.get("is_empty", False):
+            # If validation passed, include the content
+            matching_content = next((c for c in state["generated_content"]
+                                   if c.get("element_type") == result["element_type"]), {})
+            result["status"] = "success"
+            result["content"] = matching_content.get("content", "")
+        else:
+            # If validation failed, include the error messages
+            result["status"] = "failed"
+            errors = [msg for msg in state.get("errors", [])
+                     if msg.startswith(f"{result['element_type']}:")]
+            result["errors"] = errors if errors else ["Unknown validation error"]
 
         output.append(result)
 
+    # Update state
     state["output"] = output
+
+    # Create timestamp for unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Define the export directory path
+    export_dir = os.path.join(os.path.dirname(__file__), "exports")
+
+    # Create exports directory if it doesn't exist
+    if not os.path.exists(export_dir):
+        os.makedirs(export_dir)
+
+    # Create the full output file path
+    output_file = os.path.join(export_dir, f"copy_export_{timestamp}.json")
+
+    try:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                "timestamp": datetime.now().isoformat(),
+                "status": state.get("status", "unknown"),
+                "components": output,
+                "generation_history": state.get("generation_history", [])
+            }, f, ensure_ascii=False, indent=2)
+        logger.info(f"Output saved to {output_file}")
+    except Exception as e:
+        logger.error(f"Error saving output to file: {str(e)}")
+
     return state
 
 # Workflow Graph Setup
