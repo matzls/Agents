@@ -223,53 +223,88 @@ async def generate_content(state: State) -> State:
             "generation_history": state.get("generation_history", [])
         }
 
+def generate_feedback(validation_results: Dict[str, Any], component: Dict[str, Any]) -> List[str]:
+    """Generate detailed feedback messages based on validation results."""
+    feedback_messages = []
+    
+    # Character limit validation
+    if not validation_results.get("within_char_limit", True):
+        char_count = validation_results.get("char_count", 0)
+        char_diff = char_count - component["char_limit"]
+        feedback_messages.append(
+            f"Zeichenlimit: {char_count}/{component['char_limit']}. {char_diff} Zeichen zu viel. Generiere einen neuen Text der {char_diff} ZEICHEN KÜRZER ist."
+        )
+    
+    # Token limit validation
+    if not validation_results.get("within_token_limit", True):
+        token_count = validation_results.get("token_count", 0)
+        token_diff = token_count - component["token_limit"]
+        feedback_messages.append(
+            f"Token-Limit überschritten: {token_count}/{component['token_limit']} "
+            f"({token_diff} Token zu lang)"
+        )
+    
+    # Empty content validation
+    if validation_results.get("is_empty", False):
+        feedback_messages.append("Der generierte Text ist leer")
+    
+    # Content quality checks (can be expanded)
+    if validation_results.get("has_unwanted_prefixes", False):
+        feedback_messages.append("Text enthält unerwünschte Präfixe (z.B. 'Text:', 'Content:')")
+    
+    return feedback_messages
+
+def clean_content(content: str) -> str:
+    """Clean the content by removing unwanted prefixes and formatting."""
+    # List of common prefixes to remove
+    prefixes = ["text:", "content:", "output:", "generated text:"]
+    
+    # Convert to lowercase for case-insensitive comparison
+    content_lower = content.lower()
+    
+    # Remove known prefixes
+    for prefix in prefixes:
+        if content_lower.startswith(prefix):
+            content = content[len(prefix):].strip()
+            break
+    
+    # Remove any leading/trailing whitespace
+    content = content.strip()
+    
+    return content
+
 def validate_content(state: State) -> State:
-    """
-    Validates the generated content against specified constraints.
-
-    Args:
-        state (State): Current workflow state containing generated content
-
-    Returns:
-        State: Updated state with validation results
-
-    Validates:
-        - Character count against limit
-        - Content emptiness
-    """
-    try:
-        component = state["components"][0]
-        content = state["generated_content"].strip()
-
-        # Basic validation using dictionary key access
-        validation_results = {
-            "char_count": len(content),
-            "within_char_limit": len(content) <= component["char_limit"],
-            "is_empty": not content
-        }
-
-        # Update state including attempt_count from the state (DO NOT increment here)
-        return {
-            "components": state["components"],
-            "generated_content": state["generated_content"],
-            "validation_results": validation_results,
-            "errors": state.get("errors", []),
-            "attempt_count": state["attempt_count"],  # Get count from the state
-            "status": "completed" if validation_results["within_char_limit"] else "validation_failed",
-            "generation_history": state.get("generation_history", [])
-        }
-
-    except Exception as e:
-        # Handle errors by updating the state appropriately
-        return {
-            "components": state["components"],
-            "generated_content": state["generated_content"],
-            "validation_results": state["validation_results"],
-            "errors": state.get("errors", []) + [f"Validation error: {str(e)}"],
-            "attempt_count": state["attempt_count"],  # Get count from the state
-            "status": "error",
-            "generation_history": state.get("generation_history", [])
-        }
+    """Validates the generated content against specified criteria."""
+    component = state["components"][0]
+    content = clean_content(state["generated_content"])  # Clean content before validation
+    
+    # Perform all validations
+    validation_results = {
+        "char_count": len(content),
+        "within_char_limit": len(content) <= component["char_limit"],
+        "is_empty": len(content.strip()) == 0,
+        "has_unwanted_prefixes": any(
+            state["generated_content"].lower().startswith(prefix) 
+            for prefix in ["text:", "content:", "output:"]
+        ),
+        # Token validation could be added here
+    }
+    
+    # Generate detailed feedback using the new function
+    feedback_messages = generate_feedback(validation_results, component)
+    
+    # Update state with results and cleaned content
+    state["generated_content"] = content  # Store cleaned content
+    state["validation_results"] = validation_results
+    state["errors"] = feedback_messages
+    
+    # Update status based on validation results
+    if feedback_messages:
+        state["status"] = "validation_failed"
+    else:
+        state["status"] = "completed"
+    
+    return state
 
 def should_continue(state: State) -> str:
     """
