@@ -8,6 +8,7 @@ from typing_extensions import TypedDict
 from datetime import datetime
 import json
 from dataclasses import dataclass
+from langchain.schema import SystemMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -46,7 +47,7 @@ class State(TypedDict):
     status: str
     generation_history: List[Dict[str, Any]]
 
-# Knowledge base loading function
+# Knowledge base loading function (remains synchronous as it's a one-time load)
 def load_knowledge_base(filepath: str) -> dict:
     """Loads the knowledge base from a JSON file."""
     with open(filepath, 'r') as f:
@@ -55,9 +56,9 @@ def load_knowledge_base(filepath: str) -> dict:
 # Reuse your existing functions with modifications for Studio compatibility
 @retry(wait=wait_exponential(multiplier=1, min=4, max=10),
        stop=stop_after_attempt(3))
-def generate_with_retry(llm, prompt: str):
-    """Generate content with retry logic."""
-    return llm.invoke(prompt)
+async def generate_with_retry(llm, prompt: str):
+    """Generate content with retry logic (async)."""
+    return await llm.ainvoke(prompt)
 
 def construct_prompt(component: Dict[str, Any], kb_info: Dict[str, Any], feedback_text: str) -> str:
     """Constructs the prompt for the LLM based on component and knowledge base information."""
@@ -83,7 +84,18 @@ LÄNGENHINWEISE:
 - Jeder Satz sollte einen klaren Mehrwert haben
 """
 
+    # Add feedback section if provided
+    feedback_section = ""
+    if feedback_text:
+        feedback_section = f"""
+FEEDBACK ZUM VORHERIGEN VERSUCH:
+{feedback_text}
+Bitte berücksichtige dieses Feedback bei der Generierung des neuen Textes.
+"""
+
     prompt = f"""Du bist ein erfahrener Decathlon CRM Copywriter, spezialisiert auf die Erstellung von E-Mail-Inhalten.
+
+{feedback_section}
 
 ROLLE UND AUFGABE:
 - Entwickle inspirierende, energiegeladene Kommunikation für sportbegeisterte Menschen
@@ -126,9 +138,9 @@ FORMATIERUNG:
 WICHTIG: Der Text MUSS kürzer als {char_limit} Zeichen sein. Zähle jeden Buchstaben, jedes Leerzeichen und jedes Satzzeichen."""
     return prompt
 
-def generate_content(state: State) -> State:
+async def generate_content(state: State) -> State:
     """
-    Generates copy content using LLM based on the component specifications.
+    Generates copy content using LLM based on the component specifications (async).
 
     Args:
         state (State): Current workflow state
@@ -154,18 +166,30 @@ def generate_content(state: State) -> State:
         # Get relevant information from the knowledge base using dictionary key access
         kb_info = knowledge_base.get(component["component_type"], {}).get(component["element_type"], {})
 
-        # Add feedback to the prompt if the previous attempt failed validation
+        # Enhanced feedback logic
         feedback_text = ""
         if state.get("status") == "validation_failed" and state.get("validation_results"):
             validation_results = state["validation_results"]
+            feedback_parts = []
+            
             if not validation_results["within_char_limit"]:
-                feedback_text += f"\n\nHINWEIS: Der vorherige Versuch hat das Zeichenlimit um {validation_results['char_count'] - component['char_limit']} Zeichen überschritten. Bitte kürze den Text entsprechend."
-            # We can add more feedback conditions here for other validation failures (e.g., token limit)
+                char_diff = validation_results["char_count"] - component["char_limit"]
+                feedback_parts.append(f"- Der Text ist um {char_diff} Zeichen zu lang. Bitte kürze den Text entsprechend.")
+            
+            if validation_results.get("is_empty"):
+                feedback_parts.append("- Der generierte Text war leer. Bitte generiere einen neuen Text.")
+                
+            if state.get("errors"):
+                for error in state["errors"]:
+                    feedback_parts.append(f"- {error}")
+            
+            if feedback_parts:
+                feedback_text = "\n".join(feedback_parts)
 
         # Construct the prompt using the separate function
         prompt = construct_prompt(component, kb_info, feedback_text)
 
-        response = generate_with_retry(llm, prompt)
+        response = await generate_with_retry(llm, prompt)
 
         # Correctly increment the attempt counter
         current_attempt_count = state.get("attempt_count", 0)
@@ -300,5 +324,3 @@ knowledge_base = load_knowledge_base("template_kb.json")
 # Compile the graph
 graph = workflow.compile()
 
-# Example input for testing in LangGraph Studio
-[{"component_type": "headline basic", "element_type": "Introduction Copy", "char_limit": 400, "token_limit": 200, "audience": "Schwimmen", "max_attempts": 2}]
