@@ -28,14 +28,12 @@ class CopyComponent:
         component_type (str): Type of the component (e.g., 'headline basic').
         element_type (str): Specific element within the component type (e.g., 'headline_text').
         char_limit (int): Maximum number of characters allowed for the content.
-        token_limit (int): Maximum number of tokens allowed for the content.
         audience (str): Target audience for the content.
         max_attempts (int): Maximum number of generation attempts allowed for this component. Defaults to 3.
     """
     component_type: str
     element_type: str
     char_limit: int
-    token_limit: int
     audience: str
     max_attempts: int = 3
 
@@ -199,16 +197,6 @@ def generate_feedback(validation_results: Dict[str, Any], component: CopyCompone
             f"({char_diff} Zeichen zu lang)"
         )
 
-    # Token limit validation
-    if not validation_results.get("within_token_limit", True):
-        token_count = validation_results.get("token_count", 0)
-        token_limit = component.token_limit
-        token_diff = token_count - token_limit
-        feedback_messages.append(
-            f"Token-Limit überschritten: {token_count}/{token_limit} "
-            f"({token_diff} Token zu lang)"
-        )
-
     # Empty content validation
     if validation_results.get("is_empty", False):
         feedback_messages.append("Der generierte Text ist leer")
@@ -266,7 +254,7 @@ async def generate_content(state: State) -> State:
     if not all(isinstance(comp, CopyComponent) for comp in state["components"]):
         state["components"] = [CopyComponent(**comp) for comp in state["components"]]
 
-    knowledge_base = load_knowledge_base("template_kb.json")
+    knowledge_base = load_knowledge_base("template_kb_full_notokens.json")
 
     generated_contents = []
     for component in state["components"]:

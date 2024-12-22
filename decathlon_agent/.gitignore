@@ -1,0 +1,25 @@
+# Python virtual environment
+decathlon_venv/
+venv/
+env/
+.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Exports and generated content
+exports/
+*.json
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
