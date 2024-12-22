@@ -1,4 +1,3 @@
-
 # Decathlon Copy Generation Agent
 
 This project implements an agent for generating marketing copy for Decathlon CRM emails. It uses Langchain and LangGraph to orchestrate a workflow involving content generation, validation, and formatting.
@@ -7,18 +6,29 @@ This project implements an agent for generating marketing copy for Decathlon CRM
 
 The agent takes a list of `CopyComponent` objects as input, each defining the requirements for a specific piece of content (e.g., headline, body text). It then uses an OpenAI language model to generate content for each component, validates the generated content against predefined rules (like character limits), and formats the final output into a JSON file.
 
-The workflow includes retry mechanisms to handle potential errors during content generation and provides feedback to the language model based on validation failures.
+The workflow follows a specific pattern:
+1. **Generate:** Creates content for each component
+2. **Validate:** Checks if the content meets all requirements
+3. **Format Output:** Prepares the final output with either successful content or error messages
 
 ## Features
 
-- **Component-based Content Generation:** Generates content based on predefined components with specific requirements.
-- **OpenAI Integration:** Leverages the power of OpenAI's language models for content creation.
-- **Validation:** Ensures generated content adheres to specified constraints (character limits, formatting).
-- **Retry Logic:** Implements retry mechanisms for robust content generation.
-- **Feedback Loop:** Provides feedback to the language model for iterative improvement.
-- **Structured Output:** Formats the generated content into a clean JSON structure.
-- **Logging:** Provides detailed logging of the generation process.
-- **Docker Support:** Instructions for copying generated exports from a Docker container.
+- **Component-based Content Generation:** Generates content based on predefined components with specific requirements
+- **LLM Integration:** Supports multiple language models:
+  - OpenAI's GPT models
+  - Google's Gemini models (via ChatGoogleGenerativeAI)
+- **Validation System:** Ensures generated content adheres to:
+  - Character limits
+  - Content formatting rules
+  - Empty content checks
+- **Retry Logic:** 
+  - Configurable max attempts per component
+  - Automatic retries with feedback from previous attempts
+- **Structured Output:** 
+  - JSON format with clear status indicators
+  - Detailed error messages when generation fails
+  - Timestamp-based file naming
+- **Logging:** Comprehensive logging system for debugging and monitoring
 
 ## Installation
 
@@ -41,84 +51,93 @@ The workflow includes retry mechanisms to handle potential errors during content
    ```
 
 4. **Set up environment variables:**
-   - Create a `.env` file in the root directory of the project.
-   - Add your OpenAI API key to the `.env` file:
-     ```
-     OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-     ```
+   Create a `.env` file with the required API keys:
+   ```
+   OPENAI_API_KEY="your_openai_api_key"
+   GOOGLE_API_KEY="your_google_api_key"  # If using Gemini
+   ```
 
 5. **Prepare the knowledge base:**
-   - Ensure you have a `template_kb.json` file in the same directory as the main script. This file contains examples and guidelines for content generation. You can modify this file to suit your specific needs.
+   Ensure `template_kb_full_notokens.json` is present in the project directory with your content examples and guidelines.
 
 ## Usage
 
-The main entry point for the agent is the compiled LangGraph workflow. You will need to define the `components` within your application that will be passed to the workflow.
-
-Here's a basic example of how you might define the initial state and invoke the graph:
+### Basic Example
 
 ```python
-from your_module import graph, State, CopyComponent  # Replace your_module
+from decathlon_studio import CopyComponent, graph
 
-initial_state = State(
-    components=[
-        CopyComponent(
-            component_type="headline",
-            element_type="headline_basic",
-            char_limit=60,
-            token_limit=15,
-            audience="Sports Enthusiasts"
-        ),
-        # Add more CopyComponent instances as needed
+# Define your components
+components = [
+    CopyComponent(
+        component_type="headline_basic",
+        element_type="headline_text",
+        char_limit=50,
+        audience="sports_enthusiasts",
+        briefing="Focus on running equipment"
+    )
+]
+
+# Create initial state
+initial_state = {
+    "components": components,
+    "generated_content": [],
+    "validation_results": [],
+    "errors": [],
+    "attempt_count": 0,
+    "status": "starting",
+    "generation_history": [],
+    "output": []
+}
+
+# Run the workflow
+result = await graph.ainvoke(initial_state)
+```
+
+### Output Structure
+
+The generated output will be saved in the `exports` directory with the following structure:
+```json
+{
+    "timestamp": "2024-03-XX...",
+    "status": "success|failed",
+    "components": [
+        {
+            "component_type": "headline_basic",
+            "element_type": "headline_text",
+            "audience": "sports_enthusiasts",
+            "status": "success|failed",
+            "content": "Generated content or error message",
+            "errors": []
+        }
     ],
-    generated_content=[],
-    validation_results=[],
-    errors=[],
-    attempt_count=0,
-    status="initial",
-    generation_history=[],
-    output=[]
-)
-
-result = graph.invoke(initial_state)
-print(result)
+    "generation_history": []
+}
 ```
 
-Replace `your_module` with the actual name of the Python file containing your code.
+## Workflow Graph
 
-## Configuration
+The agent uses a LangGraph workflow with the following nodes:
+- `START` → `generate`
+- `generate` → `validate`
+- `validate` → `generate` (if validation fails and max attempts not reached)
+- `validate` → `format_output` (if validation passes or max attempts reached)
+- `format_output` → `END`
 
-- **`.env` file:** Used to store sensitive information like API keys.
-- **`template_kb.json`:** Contains the knowledge base used for generating prompts. You can customize this file to provide specific examples and constraints for different content components.
-- **Logging:** The logging level and format can be configured in the `logging.basicConfig` call within the Python script.
+## Error Handling
 
-## Docker
+The system handles various error cases:
+- Generation failures
+- Validation failures
+- API errors
+- Character limit violations
 
-If you are running this agent within a Docker container, the generated output files will be located in the `/deps/__outer_studio/src/exports/` directory inside the container.
-
-To copy the exports from the Docker container to your local machine, use the following command:
-
-```bash
-docker cp <container_id>:/deps/__outer_studio/src/exports/ <local_destination_path>
-```
-
-Replace `<container_id>` with the actual ID of your running Docker container and `<local_destination_path>` with the path on your local machine where you want to save the exports.
-
-For example:
-
-```bash
-docker cp 5883f8f3010f:/deps/__outer_studio/src/exports/ /Users/mg/Desktop/GitHub/Playground/Agents/decathlon_agent/studio/exports/
-```
+All errors are documented in the output file, making debugging and monitoring straightforward.
 
 ## Contributing
 
-Contributions to this project are welcome! Please follow these guidelines:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Make your changes and ensure they are well-documented.
-4. Submit a pull request with a clear description of your changes.
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
 
 ## License
 
-[Specify your project's license here]
-```
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -10,13 +10,33 @@ import json
 from dataclasses import dataclass
 from langchain.schema import SystemMessage
 import os
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
+
+# Load environment variables from .env files
 load_dotenv()
+
+# set name "Decathlon Copy Generation Agent" for langchain tracing
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_NAME"] = "Decathlon Copy Generation Agent"
+# get openai api key from .env
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+
+
+# Initialize LLM
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0.4,
+    max_retries=2,
+    request_timeout=30
+)
+
+
 
 # Schema definitions
 @dataclass
@@ -30,12 +50,14 @@ class CopyComponent:
         char_limit (int): Maximum number of characters allowed for the content.
         audience (str): Target audience for the content.
         max_attempts (int): Maximum number of generation attempts allowed for this component. Defaults to 3.
+        briefing (str, optional): Additional instructions or context for this component. Defaults to None.
     """
     component_type: str
     element_type: str
     char_limit: int
     audience: str
     max_attempts: int = 3
+    briefing: str = None
 
 class State(TypedDict):
     """
@@ -130,9 +152,20 @@ FEEDBACK ZUM VORHERIGEN VERSUCH:
 Bitte berücksichtige dieses Feedback bei der Generierung des neuen Textes.
 """
 
+    # Add briefing section if provided
+    briefing_section = ""
+    if component.briefing:
+        briefing_section = f"""
+ZUSÄTZLICHE ANWEISUNGEN (BRIEFING):
+{component.briefing}
+Berücksichtige diese zusätzlichen Anweisungen bei der Texterstellung.
+"""
+
     prompt = f"""Du bist ein erfahrener Decathlon CRM Copywriter, spezialisiert auf die Erstellung von E-Mail-Inhalten.
 
 {feedback_section}
+
+{briefing_section}
 
 ROLLE UND AUFGABE:
 - Entwickle inspirierende, energiegeladene Kommunikation für sportbegeisterte Menschen
@@ -169,8 +202,6 @@ FORMATIERUNG:
 - Gib NUR den reinen Text zurück, ohne Präfixe wie 'Text:' oder 'Content:'
 - Keine zusätzliche Formatierung
 - Text muss in deutscher Sprache sein
-
-{feedback_text}
 
 WICHTIG: Der Text MUSS kürzer als {char_limit} Zeichen sein. Zähle jeden Buchstaben, jedes Leerzeichen und jedes Satzzeichen."""
     return prompt
@@ -259,13 +290,6 @@ async def generate_content(state: State) -> State:
     generated_contents = []
     for component in state["components"]:
         try:
-            llm = ChatOpenAI(
-                model="gpt-4-turbo-preview",
-                temperature=0.2,
-                max_retries=2,
-                request_timeout=30
-            )
-
             kb_info = knowledge_base.get(component.component_type, {}).get(component.element_type, {})
 
             # Enhanced feedback logic: Provide feedback from previous validation attempts
@@ -361,20 +385,22 @@ def should_continue(state: State) -> str:
         state (State): The current state of the workflow.
 
     Returns:
-        str: The name of the next node to execute or END if the workflow should terminate.
+        str: The name of the next node to execute ("generate" or "format_output").
     """
+    # Always go to format_output if validation passed
     if state["status"] == "validation_passed":
         return "format_output"
 
-    # Check if any component has reached max attempts
-    if state.get("attempt_count", 0) >= state["components"][0].max_attempts if state["components"] else False:
-        state["status"] = "max_attempts_reached"
-        return END
+    # Go to format_output if max attempts reached (regardless of validation status)
+    if state.get("attempt_count", 0) >= state["components"][0].max_attempts:
+        return "format_output"
 
-    if state["status"] == "validation_failed":
-        return "generate"
+    # Go to format_output if there's an error
+    if state.get("status") == "error":
+        return "format_output"
 
-    return END
+    # Otherwise, continue generating
+    return "generate"
 
 def format_output(state: State) -> State:
     """Formats the final output as a clean JSON structure and saves it to a file.
@@ -402,15 +428,20 @@ def format_output(state: State) -> State:
         else:
             validation = validation_results
 
+        # Check if max attempts reached
+        max_attempts_reached = state.get("attempt_count", 0) >= component.max_attempts
+
+        # Validation passed
         if validation.get("within_char_limit", True) and not validation.get("is_empty", False):
-            # If validation passed, include the content
+            result["status"] = "success"
             matching_content = next((c for c in state["generated_content"]
                                    if c.get("element_type") == result["element_type"]), {})
-            result["status"] = "success"
             result["content"] = matching_content.get("content", "")
+            result["errors"] = []  # Clear errors if validation passed
+        # Max attempts reached and validation failed or error occurred
         else:
-            # If validation failed, include the error messages
             result["status"] = "failed"
+            result["content"] = "GUIDELINE CONFORM CONTENT COULD NOT BE GENERATED"
             errors = [msg for msg in state.get("errors", [])
                      if msg.startswith(f"{result['element_type']}:")]
             result["errors"] = errors if errors else ["Unknown validation error"]
@@ -463,7 +494,6 @@ workflow.add_conditional_edges(
     should_continue,
     {
         "format_output": "format_output",
-        END: END,
         "generate": "generate"
     }
 )
